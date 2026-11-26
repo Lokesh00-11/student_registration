@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { DEPARTMENTS } from '../constants/departments';
+import { studentApi, type StudentDto } from '../services/studentApi';
+import {
+  type StudentFormData,
+  initialStudentFormData,
+} from '../types/student';
 import {
   User,
   Users,
@@ -11,75 +16,68 @@ import {
   Send
 } from 'lucide-react';
 
-export interface StudentFormData {
-  // Personal Information
-  firstName: string;
-  lastName: string;
-  dob: string;
-  gender: string;
-  bloodGroup: string;
-  nationality: string;
+export type { StudentFormData };
 
-  // Academic Information
-  admissionNumber: string;
-  rollNumber: string;
-  department: string;
-  semester: string;
-  gpa: string;
-
-  // Parent / Guardian Information
-  fatherName: string;
-  motherName: string;
-  fatherOccupation: string;
-  parentPhone: string;
-
-  // Contact Information
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
+function getInitialFormData(editingStudent?: StudentDto | null, count = 0): StudentFormData {
+  if (editingStudent) {
+    return {
+      firstName: editingStudent.firstName || '',
+      lastName: editingStudent.lastName || '',
+      dob: editingStudent.dob || '2005-01-15',
+      gender: editingStudent.gender || 'Male',
+      bloodGroup: editingStudent.bloodGroup || 'O+',
+      nationality: editingStudent.nationality || 'Indian',
+      admissionNumber: editingStudent.admissionNo || '',
+      rollNumber: editingStudent.rollNo || '',
+      department: editingStudent.department || 'Computer Science & Engineering',
+      semester: editingStudent.semester || '1st Semester',
+      gpa: editingStudent.gpa !== undefined ? String(editingStudent.gpa) : '9.00',
+      fatherName: editingStudent.fatherName || '',
+      motherName: editingStudent.motherName || '',
+      fatherOccupation: editingStudent.fatherOccupation || '',
+      parentPhone: editingStudent.parentPhone || '',
+      email: editingStudent.email || '',
+      phone: editingStudent.phone || '',
+      address: editingStudent.address || '',
+      city: editingStudent.city || '',
+      state: editingStudent.state || 'Telangana',
+      pincode: editingStudent.pinCode || '',
+    };
+  }
+  return {
+    ...initialStudentFormData,
+    admissionNumber: `ADM-2026-${String(count + 1).padStart(3, '0')}`,
+    rollNumber: `ROLL-2026-${String(count + 1).padStart(3, '0')}`,
+  };
 }
-
-const initialFormData: StudentFormData = {
-  firstName: '',
-  lastName: '',
-  dob: '',
-  gender: 'Male',
-  bloodGroup: 'O+',
-  nationality: 'Indian',
-  admissionNumber: '',
-  rollNumber: '',
-  department: 'Computer Science & Engineering',
-  semester: '1st Semester',
-  gpa: '9.20',
-  fatherName: '',
-  motherName: '',
-  fatherOccupation: '',
-  parentPhone: '',
-  email: '',
-  phone: '',
-  address: '',
-  city: '',
-  state: 'Telangana',
-  pincode: '',
-};
 
 interface StudentRegistrationFormProps {
   onSuccess?: (newStudent: StudentFormData) => void;
   existingCount: number;
+  editingStudent?: StudentDto | null;
+  onCancelEdit?: () => void;
 }
 
 export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = ({
   onSuccess,
-  existingCount
+  existingCount,
+  editingStudent,
+  onCancelEdit,
 }) => {
-  const [formData, setFormData] = useState<StudentFormData>(() => ({
-    ...initialFormData,
-    admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
-    rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
-  }));
+  const isEditing = Boolean(editingStudent && editingStudent.id);
+
+  const [formData, setFormData] = useState<StudentFormData>(() =>
+    getInitialFormData(editingStudent, existingCount)
+  );
+
+  // Re-sync if editingStudent changes
+  React.useEffect(() => {
+    if (editingStudent) {
+      setFormData(getInitialFormData(editingStudent, existingCount));
+      setAlertMessage(null);
+      setErrors({});
+    }
+  }, [editingStudent, existingCount]);
 
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,29 +176,66 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     setAlertMessage(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const studentPayload: StudentDto = {
+        admissionNo: formData.admissionNumber.replace('#', '').trim(),
+        rollNo: formData.rollNumber.replace('#', '').trim(),
+        department: formData.department,
+        semester: formData.semester,
+        gpa: parseFloat(formData.gpa) || 0.0,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        dob: formData.dob,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
+        nationality: formData.nationality,
+        fatherName: formData.fatherName,
+        motherName: formData.motherName,
+        fatherOccupation: formData.fatherOccupation,
+        parentPhone: formData.parentPhone,
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pinCode: formData.pincode,
+      };
 
-      if (onSuccess) {
-        onSuccess(formData);
+      if (isEditing && editingStudent?.id) {
+        // UPDATE student in PostgreSQL DB
+        await studentApi.update(editingStudent.id, studentPayload);
+
+        if (onSuccess) {
+          onSuccess(formData);
+        }
+
+        const studentFullName = `${formData.firstName} ${formData.lastName}`.trim();
+        setAlertMessage({
+          type: 'success',
+          text: `Student "${studentFullName}" (Roll: ${formData.rollNumber}) updated successfully in PostgreSQL database!`,
+        });
+      } else {
+        // CREATE new student in PostgreSQL DB
+        const savedStudent = await studentApi.create(studentPayload);
+
+        if (onSuccess) {
+          onSuccess(formData);
+        }
+
+        const studentFullName = `${formData.firstName} ${formData.lastName}`.trim();
+        setAlertMessage({
+          type: 'success',
+          text: `Student "${studentFullName}" (Roll: ${formData.rollNumber}) registered and saved to PostgreSQL database successfully (ID: ${savedStudent.id})!`,
+        });
+
+        // Prepare next student record with auto-increment
+        setFormData(getInitialFormData(null, existingCount + 1));
+        setErrors({});
       }
-
-      const studentFullName = `${formData.firstName} ${formData.lastName}`.trim();
-      setAlertMessage({
-        type: 'success',
-        text: `Student "${studentFullName}" (Roll: ${formData.rollNumber}, Adm: ${formData.admissionNumber}) registered successfully with GPA ${formData.gpa}!`,
-      });
-
-      // Prepare next student record with auto-increment
-      setFormData({
-        ...initialFormData,
-        admissionNumber: `ADM-2026-${String(existingCount + 2).padStart(3, '0')}`,
-        rollNumber: `ROLL-2026-${String(existingCount + 2).padStart(3, '0')}`,
-      });
-      setErrors({});
-    } catch {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save student to database. Ensure backend is running.';
       setAlertMessage({
         type: 'error',
-        text: 'Failed to complete registration. Please try again.',
+        text: errorMsg,
       });
     } finally {
       setIsSubmitting(false);
@@ -208,17 +243,51 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
   };
 
   const handleReset = () => {
-    setFormData({
-      ...initialFormData,
-      admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
-      rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
-    });
+    setFormData(getInitialFormData(null, existingCount));
     setErrors({});
     setAlertMessage(null);
   };
 
   return (
     <div className="fullscreen-form-wrapper">
+      {/* Edit Mode Notice Banner */}
+      {isEditing && (
+        <div style={{
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: '10px',
+          padding: '14px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          color: '#1e40af',
+          fontWeight: 600,
+          fontSize: '0.95rem'
+        }}>
+          <span>
+            ✏️ Editing Student Record: <strong>{editingStudent?.firstName} {editingStudent?.lastName}</strong> (#{editingStudent?.admissionNo} / {editingStudent?.rollNo})
+          </span>
+          {onCancelEdit && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #93c5fd',
+                borderRadius: '6px',
+                padding: '6px 14px',
+                color: '#2563eb',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Alert Banner */}
       {alertMessage && (
         <div className={`alert-banner ${alertMessage.type}`}>
@@ -390,6 +459,8 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                 <option value="4th Semester">4th Semester</option>
                 <option value="5th Semester">5th Semester</option>
                 <option value="6th Semester">6th Semester</option>
+                <option value="7th Semester">7th Semester</option>
+                <option value="8th Semester">8th Semester</option>
               </select>
             </div>
 
@@ -556,15 +627,27 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 
         {/* Form Actions */}
         <div className="form-actions-bar">
-          <button
-            type="button"
-            className="secondary-btn action-btn"
-            onClick={handleReset}
-            disabled={isSubmitting}
-          >
-            <RotateCcw size={18} />
-            <span>Reset All Fields</span>
-          </button>
+          {isEditing && onCancelEdit ? (
+            <button
+              type="button"
+              className="secondary-btn action-btn"
+              onClick={onCancelEdit}
+              disabled={isSubmitting}
+            >
+              <RotateCcw size={18} />
+              <span>Cancel Edit</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="secondary-btn action-btn"
+              onClick={handleReset}
+              disabled={isSubmitting}
+            >
+              <RotateCcw size={18} />
+              <span>Reset All Fields</span>
+            </button>
+          )}
 
           <button
             type="submit"
@@ -572,11 +655,16 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <span>Registering to Real-Time System...</span>
+              <span>Saving to PostgreSQL Database...</span>
+            ) : isEditing ? (
+              <>
+                <Send size={18} />
+                <span>Update Student in PostgreSQL Database</span>
+              </>
             ) : (
               <>
                 <Send size={18} />
-                <span>Submit & Save Student Registration</span>
+                <span>Submit & Save Student to Database</span>
               </>
             )}
           </button>

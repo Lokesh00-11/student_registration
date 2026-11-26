@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { DashboardCard } from './components/DashboardCard';
-import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
+import { StudentRegistrationForm } from './components/StudentRegistrationForm';
+import { StudentDetailsModal } from './components/StudentDetailsModal';
+import { StudentTable } from './components/StudentTable';
 import { DEPARTMENTS } from './constants/departments';
+import { studentApi, type StudentDto } from './services/studentApi';
+import { type StudentRecord } from './types/student';
 import { 
   Users, 
   Award, 
@@ -11,145 +15,12 @@ import {
   Search, 
   Filter, 
   RotateCw, 
-  UserPlus 
+  UserPlus
 } from 'lucide-react';
 import './App.css';
 
-export interface StudentRecord {
-  id: string; // unique key
-  admissionNo: string;
-  rollNo: string;
-  name: string;
-  course: string;
-  date: string;
-  gpa: number;
-  gender: string;
-  email: string;
-  phone: string;
-}
+export type { StudentRecord };
 
-const defaultInitialStudents: StudentRecord[] = [
-  {
-    id: 'ADM-2026-001',
-    admissionNo: 'ADM-2026-001',
-    rollNo: 'ROLL-2026-001',
-    name: 'Aarav Sharma',
-    course: 'Computer Science & Engineering',
-    date: '26 Nov 2026',
-    gpa: 9.85,
-    gender: 'Male',
-    email: 'aarav.sharma@example.com',
-    phone: '9876543210',
-  },
-  {
-    id: 'ADM-2026-002',
-    admissionNo: 'ADM-2026-002',
-    rollNo: 'ROLL-2026-002',
-    name: 'Sneha Patil',
-    course: 'Information Technology',
-    date: '26 Nov 2026',
-    gpa: 9.40,
-    gender: 'Female',
-    email: 'sneha.patil@example.com',
-    phone: '9823456789',
-  },
-  {
-    id: 'ADM-2026-003',
-    admissionNo: 'ADM-2026-003',
-    rollNo: 'ROLL-2026-003',
-    name: 'Rahul Reddy',
-    course: 'Data Science',
-    date: '25 Nov 2026',
-    gpa: 8.90,
-    gender: 'Male',
-    email: 'rahul.reddy@example.com',
-    phone: '9812345678',
-  },
-  {
-    id: 'ADM-2026-004',
-    admissionNo: 'ADM-2026-004',
-    rollNo: 'ROLL-2026-004',
-    name: 'Pooja Verma',
-    course: 'Electronics & Communication',
-    date: '25 Nov 2026',
-    gpa: 9.15,
-    gender: 'Female',
-    email: 'pooja.verma@example.com',
-    phone: '9789012345',
-  },
-  {
-    id: 'ADM-2026-005',
-    admissionNo: 'ADM-2026-005',
-    rollNo: 'ROLL-2026-005',
-    name: 'Karthik Raman',
-    course: 'Mechanical Engineering',
-    date: '24 Nov 2026',
-    gpa: 8.45,
-    gender: 'Male',
-    email: 'karthik.raman@example.com',
-    phone: '9765432109',
-  },
-  {
-    id: 'ADM-2026-006',
-    admissionNo: 'ADM-2026-006',
-    rollNo: 'ROLL-2026-006',
-    name: 'Ananya Iyer',
-    course: 'Computer Science & Engineering',
-    date: '24 Nov 2026',
-    gpa: 9.60,
-    gender: 'Female',
-    email: 'ananya.iyer@example.com',
-    phone: '9712345678',
-  },
-  {
-    id: 'ADM-2026-007',
-    admissionNo: 'ADM-2026-007',
-    rollNo: 'ROLL-2026-007',
-    name: 'Rohan Gupta',
-    course: 'Information Technology',
-    date: '23 Nov 2026',
-    gpa: 8.75,
-    gender: 'Male',
-    email: 'rohan.gupta@example.com',
-    phone: '9654321098',
-  },
-  {
-    id: 'ADM-2026-008',
-    admissionNo: 'ADM-2026-008',
-    rollNo: 'ROLL-2026-008',
-    name: 'Divya Nair',
-    course: 'Artificial Intelligence and Machine Learning',
-    date: '22 Nov 2026',
-    gpa: 9.30,
-    gender: 'Female',
-    email: 'divya.nair@example.com',
-    phone: '9612345678',
-  },
-  {
-    id: 'ADM-2026-009',
-    admissionNo: 'ADM-2026-009',
-    rollNo: 'ROLL-2026-009',
-    name: 'Vikram Joshi',
-    course: 'Electronics & Communication',
-    date: '21 Nov 2026',
-    gpa: 8.10,
-    gender: 'Male',
-    email: 'vikram.joshi@example.com',
-    phone: '9543210987',
-  },
-  {
-    id: 'ADM-2026-010',
-    admissionNo: 'ADM-2026-010',
-    rollNo: 'ROLL-2026-010',
-    name: 'Meera Deshmukh',
-    course: 'Computer Science & Engineering',
-    date: '20 Nov 2026',
-    gpa: 9.50,
-    gender: 'Female',
-    email: 'meera.d@example.com',
-    phone: '9512345678',
-  },
-];
 
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -158,55 +29,60 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('ALL');
 
-  // Real-time Persistent Students State
-  const [students, setStudents] = useState<StudentRecord[]>(() => {
+  // Database Students (fetched from Spring Boot -> PostgreSQL)
+  const [dbStudents, setDbStudents] = useState<StudentRecord[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Currently Editing Student for CRUD Update
+  const [editingStudent, setEditingStudent] = useState<StudentDto | null>(null);
+
+  // View Details Modal State
+  const [viewingStudent, setViewingStudent] = useState<StudentDto | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isLoadingView, setIsLoadingView] = useState(false);
+
+  // Sync / Load Students from Spring Boot Backend (Real Data Only)
+  const loadDbStudents = useCallback(async () => {
+    setIsSyncing(true);
     try {
-      const saved = localStorage.getItem('edu_realtime_students');
-      if (saved) {
-        const parsed: StudentRecord[] = JSON.parse(saved);
-        return parsed.map((s, idx) => {
-          const numStr = String(idx + 1).padStart(3, '0');
-          const foundMatch = (s.id || s.admissionNo || '').match(/\d+$/);
-          const studentNum = foundMatch ? foundMatch[0].padStart(3, '0') : numStr;
+      const data = await studentApi.getAll();
 
-          const adm = s.admissionNo && s.admissionNo.startsWith('ADM')
-            ? s.admissionNo.replace('#', '')
-            : `ADM-2026-${studentNum}`;
+      const formatted: StudentRecord[] = data.map((s) => ({
+        id: `DB-${s.id}`,
+        numericId: s.id,
+        admissionNo: s.admissionNo,
+        rollNo: s.rollNo,
+        name: `${s.firstName} ${s.lastName}`.trim(),
+        course: s.department,
+        date: s.createdAt
+          ? new Date(s.createdAt).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })
+          : '26 Nov 2026',
+        gpa: typeof s.gpa === 'number' ? s.gpa : (parseFloat(String(s.gpa)) || 8.0),
+        gender: s.gender || 'Other',
+        email: s.email || '',
+        phone: s.phone || '',
+      }));
 
-          const roll = s.rollNo && s.rollNo.startsWith('ROLL')
-            ? s.rollNo.replace('#', '')
-            : `ROLL-2026-${studentNum}`;
-
-          return {
-            ...s,
-            id: adm,
-            admissionNo: adm,
-            rollNo: roll,
-            name: s.name || 'Student',
-            course: s.course === 'Data Science & AI' ? 'Data Science' : (s.course || 'General'),
-            gpa: typeof s.gpa === 'number' ? s.gpa : (parseFloat(String(s.gpa)) || 8.0),
-            email: s.email || '',
-            phone: s.phone || '',
-            gender: s.gender || 'Other',
-            date: s.date || '26 Nov 2026',
-          };
-        });
-      }
-    } catch {
-      // Fallback
+      setDbStudents(formatted);
+    } catch (err) {
+      console.error('Failed to load students from database:', err);
+    } finally {
+      setIsSyncing(false);
     }
-    return defaultInitialStudents;
-  });
+  }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('edu_realtime_students', JSON.stringify(students));
-    } catch {
-      // ignore
-    }
-  }, [students]);
+    loadDbStudents();
+  }, [loadDbStudents]);
 
-  // Real-Time Calculations
+  // Combined students (all students from PostgreSQL database)
+  const students: StudentRecord[] = dbStudents;
+
+  // Real-Time Calculations across all students
   const totalStudents = students.length;
   const highestGPA = students.length > 0 ? Math.max(...students.map((s) => s.gpa)) : 0;
   const topStudent = students.find((s) => s.gpa === highestGPA);
@@ -216,29 +92,112 @@ export function App() {
       : '0.00';
   const uniqueDepartmentsCount = DEPARTMENTS.length;
 
-  const handleStudentAdded = (newStudent: StudentFormData) => {
-    const fullName = `${newStudent.firstName} ${newStudent.lastName}`.trim();
-    const cleanAdm = (newStudent.admissionNumber || `ADM-2026-${students.length + 1}`).replace('#', '');
-    const cleanRoll = (newStudent.rollNumber || `ROLL-2026-${students.length + 1}`).replace('#', '');
+  const handleStudentAdded = () => {
+    setEditingStudent(null);
+    loadDbStudents();
+    setActiveTab('students');
+  };
 
-    const formatted: StudentRecord = {
-      id: cleanAdm,
-      admissionNo: cleanAdm,
-      rollNo: cleanRoll,
-      name: fullName,
-      course: newStudent.department,
-      date: new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
-      gpa: parseFloat(newStudent.gpa) || 8.0,
-      gender: newStudent.gender,
-      email: newStudent.email,
-      phone: newStudent.phone,
+  // View Student Full Details Action
+  const handleViewStudent = async (student: StudentRecord) => {
+    setIsViewModalOpen(true);
+    if (student.numericId) {
+      setIsLoadingView(true);
+      try {
+        const fullDto = await studentApi.getById(student.numericId);
+        setViewingStudent(fullDto);
+      } catch (err) {
+        console.warn('Could not fetch full student details, falling back to basic data:', err);
+        const parts = (student.name || '').trim().split(' ');
+        setViewingStudent({
+          id: student.numericId,
+          admissionNo: student.admissionNo,
+          rollNo: student.rollNo,
+          firstName: parts[0] || '',
+          lastName: parts.slice(1).join(' ') || '',
+          department: student.course,
+          semester: '1st Semester',
+          gpa: student.gpa,
+          gender: student.gender,
+          email: student.email,
+          phone: student.phone,
+        });
+      } finally {
+        setIsLoadingView(false);
+      }
+    } else {
+      const parts = (student.name || '').trim().split(' ');
+      setViewingStudent({
+        admissionNo: student.admissionNo,
+        rollNo: student.rollNo,
+        firstName: parts[0] || '',
+        lastName: parts.slice(1).join(' ') || '',
+        department: student.course,
+        semester: '1st Semester',
+        gpa: student.gpa,
+        gender: student.gender,
+        email: student.email,
+        phone: student.phone,
+      });
+      setIsLoadingView(false);
+    }
+  };
+
+  // CRUD: Edit Student
+  const handleEditStudent = async (student: StudentRecord) => {
+    if (student.numericId) {
+      try {
+        const fullDto = await studentApi.getById(student.numericId);
+        setEditingStudent(fullDto);
+        setActiveTab('registration');
+        return;
+      } catch (err) {
+        console.warn('Could not fetch full student details for edit, using basic data:', err);
+      }
+    }
+
+    const parts = (student.name || '').trim().split(' ');
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+
+    const dto: StudentDto = {
+      id: student.numericId,
+      admissionNo: student.admissionNo,
+      rollNo: student.rollNo,
+      firstName: firstName,
+      lastName: lastName,
+      department: student.course,
+      gpa: student.gpa,
+      gender: student.gender,
+      email: student.email,
+      phone: student.phone,
+      semester: '1st Semester',
+      dob: '2005-01-15',
+      bloodGroup: 'O+',
+      nationality: 'Indian',
+      city: 'Hyderabad',
+      state: 'Telangana',
     };
 
-    setStudents((prev) => [formatted, ...prev]);
+    setEditingStudent(dto);
+    setActiveTab('registration');
+  };
+
+  // CRUD: Delete Student
+  const handleDeleteStudent = async (student: StudentRecord) => {
+    if (!window.confirm(`Are you sure you want to delete ${student.name} (${student.admissionNo}) from PostgreSQL database?`)) {
+      return;
+    }
+
+    if (student.numericId) {
+      try {
+        await studentApi.delete(student.numericId);
+        setDbStudents((prev) => prev.filter((s) => s.numericId !== student.numericId));
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to delete student from database';
+        alert(errorMsg);
+      }
+    }
   };
 
   // Filtered Students for the All Students page
@@ -273,7 +232,15 @@ export function App() {
   return (
     <div className="app-layout">
       {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={(tab) => {
+          if (tab === 'registration') {
+            setEditingStudent(null);
+          }
+          setActiveTab(tab);
+        }} 
+      />
 
       {/* Main Content Area */}
       <div className="main-wrapper headerless-main">
@@ -305,7 +272,12 @@ export function App() {
           {activeTab === 'registration' ? (
             <StudentRegistrationForm 
               onSuccess={handleStudentAdded} 
-              existingCount={students.length} 
+              existingCount={students.length}
+              editingStudent={editingStudent}
+              onCancelEdit={() => {
+                setEditingStudent(null);
+                setActiveTab('students');
+              }}
             />
           ) : activeTab === 'students' ? (
             /* ALL STUDENTS PAGE */
@@ -352,19 +324,23 @@ export function App() {
                 <div className="toolbar-actions">
                   <button
                     className="secondary-btn toolbar-btn"
-                    title="Refresh student list"
+                    title="Sync & refresh student list from database"
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedCourseFilter('ALL');
+                      loadDbStudents();
                     }}
                   >
                     <RotateCw size={17} />
-                    <span>Refresh</span>
+                    <span>{isSyncing ? 'Syncing...' : 'Refresh'}</span>
                   </button>
 
                   <button
                     className="primary-btn toolbar-btn"
-                    onClick={() => setActiveTab('registration')}
+                    onClick={() => {
+                      setEditingStudent(null);
+                      setActiveTab('registration');
+                    }}
                   >
                     <UserPlus size={18} />
                     <span>+ Add Student</span>
@@ -376,7 +352,7 @@ export function App() {
               <div className="directory-status-bar">
                 <span>
                   Showing <strong>{filteredStudents.length}</strong> of{' '}
-                  <strong>{students.length}</strong> total students
+                  <strong>{students.length}</strong> total registered students
                   {selectedCourseFilter !== 'ALL' && ` in ${selectedCourseFilter}`}
                 </span>
                 {(searchQuery || selectedCourseFilter !== 'ALL') && (
@@ -393,70 +369,21 @@ export function App() {
               </div>
 
               {/* All Students Table */}
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Admission No / Roll No</th>
-                      <th>Student Name</th>
-                      <th>Gender</th>
-                      <th>Department</th>
-                      <th>GPA</th>
-                      <th>Contact Details</th>
-                      <th>Reg Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStudents.length > 0 ? (
-                      filteredStudents.map((student) => (
-                        <tr key={student.id}>
-                          <td>
-                            <strong style={{ color: 'var(--primary-color)' }}>
-                              #{student.admissionNo}
-                            </strong>
-                            <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
-                              Roll: {student.rollNo}
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{student.name}</div>
-                          </td>
-                          <td>{student.gender}</td>
-                          <td>{student.course}</td>
-                          <td>
-                            <span
-                              className={`gpa-pill ${
-                                student.gpa >= 9.5
-                                ? 'gpa-top'
-                                : student.gpa >= 9.0
-                                ? 'gpa-high'
-                                : 'gpa-standard'
-                              }`}
-                            >
-                              {student.gpa.toFixed(2)}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '0.86rem', color: '#475569' }}>
-                              {student.email}
-                            </div>
-                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                              +91 {student.phone}
-                            </div>
-                          </td>
-                          <td>{student.date}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                          No students found matching "<strong>{searchQuery}</strong>". Try a different keyword or reset filters.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <StudentTable
+                students={filteredStudents}
+                emptyMessage={
+                  searchQuery ? (
+                    <>
+                      No students found matching "<strong>{searchQuery}</strong>". Try a different keyword or reset filters.
+                    </>
+                  ) : (
+                    'No students registered yet in the database.'
+                  )
+                }
+                onView={handleViewStudent}
+                onEdit={handleEditStudent}
+                onDelete={handleDeleteStudent}
+              />
             </div>
           ) : (
             /* DASHBOARD PAGE */
@@ -500,104 +427,39 @@ export function App() {
                 />
               </section>
 
-              {/* Students Table Section */}
+              {/* Recent Student Registrations Table Section */}
               <section className="dashboard-sections">
                 <div className="panel recent-registrations">
                   <div className="panel-header">
                     <h2>Recent Student Registrations</h2>
-                    <span className="badge">{totalStudents} Total</span>
+                    <span className="badge">{totalStudents} Total Enrolled</span>
                   </div>
 
-                  <div className="table-responsive">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>Admission No / Roll No</th>
-                          <th>Student Name</th>
-                          <th>Gender</th>
-                          <th>Department</th>
-                          <th>GPA</th>
-                          <th>Contact Details</th>
-                          <th>Reg Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {students.slice(0, 5).map((student) => (
-                          <tr key={student.id}>
-                            <td>
-                              <strong style={{ color: 'var(--primary-color)' }}>
-                                #{student.admissionNo}
-                              </strong>
-                              <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
-                                Roll: {student.rollNo}
-                              </div>
-                            </td>
-                            <td>
-                              <div style={{ fontWeight: 600 }}>{student.name}</div>
-                            </td>
-                            <td>{student.gender}</td>
-                            <td>{student.course}</td>
-                            <td>
-                              <span
-                                className={`gpa-pill ${
-                                  student.gpa >= 9.5
-                                    ? 'gpa-top'
-                                    : student.gpa >= 9.0
-                                    ? 'gpa-high'
-                                    : 'gpa-standard'
-                                }`}
-                              >
-                                {student.gpa.toFixed(2)}
-                              </span>
-                            </td>
-                            <td>
-                              <div style={{ fontSize: '0.86rem', color: '#475569' }}>
-                                {student.email}
-                              </div>
-                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                                +91 {student.phone}
-                              </div>
-                            </td>
-                            <td>{student.date}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="panel quick-actions">
-                  <div className="panel-header">
-                    <h2>Real-Time Summary</h2>
-                  </div>
-                  <div className="quick-info-box">
-                    <p>
-                      <strong>Total Enrolled:</strong> {totalStudents} Students
-                    </p>
-                    <p>
-                      <strong>Highest GPA:</strong> {highestGPA} (
-                      {topStudent?.name})
-                    </p>
-                    <p>
-                      <strong>Average GPA:</strong> {averageGPA}
-                    </p>
-                    <p>
-                      <strong>Active Departments:</strong> {uniqueDepartmentsCount}
-                    </p>
-                    <hr className="divider" />
-                    <button
-                      className="primary-btn"
-                      onClick={() => setActiveTab('registration')}
-                    >
-                      + Register New Student
-                    </button>
-                  </div>
+                  <StudentTable
+                    students={students.slice(0, 5)}
+                    emptyMessage="No recent student registrations found."
+                    onView={handleViewStudent}
+                    onEdit={handleEditStudent}
+                    onDelete={handleDeleteStudent}
+                  />
                 </div>
               </section>
             </>
           )}
         </main>
       </div>
+
+      {/* Student Details View Modal */}
+      <StudentDetailsModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        student={viewingStudent}
+        isLoading={isLoadingView}
+        onEdit={(dto) => {
+          setEditingStudent(dto);
+          setActiveTab('registration');
+        }}
+      />
     </div>
   );
 }
