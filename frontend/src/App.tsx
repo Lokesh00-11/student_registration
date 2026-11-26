@@ -3,7 +3,17 @@ import { Sidebar } from './components/Sidebar';
 import { DashboardCard } from './components/DashboardCard';
 import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
 import { DEPARTMENTS } from './constants/departments';
-import { Users, Award, BookOpen, TrendingUp, Sparkles } from 'lucide-react';
+import { 
+  Users, 
+  Award, 
+  BookOpen, 
+  TrendingUp, 
+  Sparkles, 
+  Search, 
+  Filter, 
+  RotateCw, 
+  UserPlus 
+} from 'lucide-react';
 import './App.css';
 
 export interface StudentRecord {
@@ -134,13 +144,16 @@ const defaultInitialStudents: StudentRecord[] = [
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Search & Filter State for All Students page
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState('ALL');
+
   // Real-time Persistent Students State
   const [students, setStudents] = useState<StudentRecord[]>(() => {
     try {
       const saved = localStorage.getItem('edu_realtime_students');
       if (saved) {
         const parsed: StudentRecord[] = JSON.parse(saved);
-        // Normalize any old cached department names
         return parsed.map((s) => ({
           ...s,
           course: s.course === 'Data Science & AI' ? 'Data Science' : s.course,
@@ -193,6 +206,21 @@ export function App() {
     setStudents((prev) => [formatted, ...prev]);
   };
 
+  // Filtered Students for the All Students page
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      query === '' ||
+      student.name.toLowerCase().includes(query) ||
+      student.id.toLowerCase().includes(query) ||
+      student.admissionNo.toLowerCase().includes(query);
+
+    const matchesCourse =
+      selectedCourseFilter === 'ALL' || student.course === selectedCourseFilter;
+
+    return matchesSearch && matchesCourse;
+  });
+
   return (
     <div className="app-layout">
       {/* Sidebar Navigation */}
@@ -201,7 +229,7 @@ export function App() {
       {/* Main Content Area */}
       <div className="main-wrapper headerless-main">
         <main className="content-container">
-          {/* Top Page Title Bar (Header and right-side icon removed) */}
+          {/* Top Page Title Bar */}
           <div className="page-top-bar">
             <div>
               <h1 className="page-main-heading">
@@ -216,6 +244,8 @@ export function App() {
               <p className="page-sub-heading">
                 {activeTab === 'dashboard'
                   ? 'Real-time performance metrics and student directory'
+                  : activeTab === 'students'
+                  ? 'Search, filter, and manage enrolled students'
                   : activeTab === 'registration'
                   ? 'Enter personal, academic, parent and contact information'
                   : 'Institute student directory'}
@@ -228,7 +258,159 @@ export function App() {
               onSuccess={handleStudentAdded} 
               existingCount={students.length} 
             />
+          ) : activeTab === 'students' ? (
+            /* ALL STUDENTS PAGE (Cards Header Removed, Active Search, Filters, Refresh, Add Student) */
+            <div className="panel fullwidth-directory-panel">
+              {/* Active Search & Filter Toolbar */}
+              <div className="directory-toolbar">
+                {/* Search by Name, Roll No, Admission No */}
+                <div className="toolbar-search">
+                  <Search size={18} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search by student name, roll number, admission number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button 
+                      className="clear-search-btn" 
+                      onClick={() => setSearchQuery('')}
+                      title="Clear search"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {/* Course Filter Dropdown */}
+                <div className="toolbar-filter">
+                  <Filter size={18} className="filter-icon" />
+                  <select
+                    value={selectedCourseFilter}
+                    onChange={(e) => setSelectedCourseFilter(e.target.value)}
+                  >
+                    <option value="ALL">All Courses ({DEPARTMENTS.length})</option>
+                    {DEPARTMENTS.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Toolbar Actions: Refresh & Add Student */}
+                <div className="toolbar-actions">
+                  <button
+                    className="secondary-btn toolbar-btn"
+                    title="Refresh student list"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCourseFilter('ALL');
+                    }}
+                  >
+                    <RotateCw size={17} />
+                    <span>Refresh</span>
+                  </button>
+
+                  <button
+                    className="primary-btn toolbar-btn"
+                    onClick={() => setActiveTab('registration')}
+                  >
+                    <UserPlus size={18} />
+                    <span>+ Add Student</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Banner */}
+              <div className="directory-status-bar">
+                <span>
+                  Showing <strong>{filteredStudents.length}</strong> of{' '}
+                  <strong>{students.length}</strong> total students
+                  {selectedCourseFilter !== 'ALL' && ` in ${selectedCourseFilter}`}
+                </span>
+                {(searchQuery || selectedCourseFilter !== 'ALL') && (
+                  <button
+                    className="reset-filters-link"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCourseFilter('ALL');
+                    }}
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+
+              {/* All Students Table */}
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Roll No / Admission No</th>
+                      <th>Student Name</th>
+                      <th>Gender</th>
+                      <th>Department</th>
+                      <th>GPA</th>
+                      <th>Contact Details</th>
+                      <th>Reg Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStudents.length > 0 ? (
+                      filteredStudents.map((student) => (
+                        <tr key={student.id}>
+                          <td>
+                            <strong style={{ color: 'var(--primary-color)' }}>
+                              #{student.id}
+                            </strong>
+                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                              {student.admissionNo}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{student.name}</div>
+                          </td>
+                          <td>{student.gender}</td>
+                          <td>{student.course}</td>
+                          <td>
+                            <span
+                              className={`gpa-pill ${
+                                student.gpa >= 9.5
+                                ? 'gpa-top'
+                                : student.gpa >= 9.0
+                                ? 'gpa-high'
+                                : 'gpa-standard'
+                              }`}
+                            >
+                              {student.gpa.toFixed(2)}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.86rem', color: '#475569' }}>
+                              {student.email}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                              +91 {student.phone}
+                            </div>
+                          </td>
+                          <td>{student.date}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                          No students found matching "<strong>{searchQuery}</strong>". Try a different keyword or reset filters.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
+            /* DASHBOARD PAGE (Shows 4 Metric Cards + Recent Students + Real-Time Summary) */
             <>
               {/* Dynamic Accurate Metric Cards */}
               <section className="cards-grid">
@@ -271,14 +453,9 @@ export function App() {
 
               {/* Students Table Section */}
               <section className="dashboard-sections">
-                <div
-                  className="panel recent-registrations"
-                  style={{ gridColumn: activeTab === 'students' ? '1 / -1' : undefined }}
-                >
+                <div className="panel recent-registrations">
                   <div className="panel-header">
-                    <h2>
-                      {activeTab === 'students' ? 'Complete Student Directory' : 'Student Registrations'}
-                    </h2>
+                    <h2>Recent Student Registrations</h2>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <span className="live-indicator">
                         <Sparkles size={14} /> Real-Time Sync Active
@@ -301,7 +478,7 @@ export function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {students.map((student) => (
+                        {students.slice(0, 5).map((student) => (
                           <tr key={student.id}>
                             <td>
                               <strong style={{ color: 'var(--primary-color)' }}>
@@ -345,35 +522,33 @@ export function App() {
                   </div>
                 </div>
 
-                {activeTab !== 'students' && (
-                  <div className="panel quick-actions">
-                    <div className="panel-header">
-                      <h2>Real-Time Summary</h2>
-                    </div>
-                    <div className="quick-info-box">
-                      <p>
-                        <strong>Total Enrolled:</strong> {totalStudents} Students
-                      </p>
-                      <p>
-                        <strong>Highest GPA:</strong> {highestGPA} (
-                        {topStudent?.name})
-                      </p>
-                      <p>
-                        <strong>Average GPA:</strong> {averageGPA}
-                      </p>
-                      <p>
-                        <strong>Active Departments:</strong> {uniqueDepartmentsCount}
-                      </p>
-                      <hr className="divider" />
-                      <button
-                        className="primary-btn"
-                        onClick={() => setActiveTab('registration')}
-                      >
-                        + Register New Student
-                      </button>
-                    </div>
+                <div className="panel quick-actions">
+                  <div className="panel-header">
+                    <h2>Real-Time Summary</h2>
                   </div>
-                )}
+                  <div className="quick-info-box">
+                    <p>
+                      <strong>Total Enrolled:</strong> {totalStudents} Students
+                    </p>
+                    <p>
+                      <strong>Highest GPA:</strong> {highestGPA} (
+                      {topStudent?.name})
+                    </p>
+                    <p>
+                      <strong>Average GPA:</strong> {averageGPA}
+                    </p>
+                    <p>
+                      <strong>Active Departments:</strong> {uniqueDepartmentsCount}
+                    </p>
+                    <hr className="divider" />
+                    <button
+                      className="primary-btn"
+                      onClick={() => setActiveTab('registration')}
+                    >
+                      + Register New Student
+                    </button>
+                  </div>
+                </div>
               </section>
             </>
           )}
