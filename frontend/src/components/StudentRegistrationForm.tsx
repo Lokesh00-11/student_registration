@@ -7,64 +7,83 @@ import {
   CheckCircle, 
   AlertCircle, 
   RotateCcw, 
-  Send 
+  Send,
+  Sparkles,
+  IdCard
 } from 'lucide-react';
 
 export interface StudentFormData {
-  // Academic Info
+  // Academic Information
   admissionNumber: string;
   department: string;
   semester: string;
   gpa: string;
+  previousEducation: string;
 
-  // Personal Info
+  // Personal Information
   fullName: string;
   dob: string;
   gender: string;
   bloodGroup: string;
+  nationality: string;
 
-  // Parent Info
+  // Parent / Guardian Information
   fatherName: string;
+  motherName: string;
   parentPhone: string;
   parentOccupation: string;
 
-  // Contact Info
+  // Contact Information
   email: string;
   phone: string;
   address: string;
   city: string;
+  state: string;
   pincode: string;
 }
 
 const initialFormData: StudentFormData = {
-  admissionNumber: '',
-  department: '',
+  admissionNumber: `ADM-2026-${String(Math.floor(Math.random() * 900) + 100)}`,
+  department: 'Computer Science & Engineering',
   semester: '1st Semester',
-  gpa: '',
+  gpa: '9.20',
+  previousEducation: '92.5%',
   fullName: '',
   dob: '',
   gender: 'Male',
-  bloodGroup: '',
+  bloodGroup: 'O+',
+  nationality: 'Indian',
   fatherName: '',
+  motherName: '',
   parentPhone: '',
   parentOccupation: '',
   email: '',
   phone: '',
   address: '',
   city: '',
+  state: 'Telangana',
   pincode: '',
 };
 
 interface StudentRegistrationFormProps {
   onSuccess?: (newStudent: StudentFormData) => void;
+  existingCount: number;
 }
 
-export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = ({ onSuccess }) => {
-  const [formData, setFormData] = useState<StudentFormData>(initialFormData);
+export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = ({ 
+  onSuccess, 
+  existingCount 
+}) => {
+  const [formData, setFormData] = useState<StudentFormData>(() => ({
+    ...initialFormData,
+    admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
+  }));
+
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Real-time onChange handler
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -85,54 +104,52 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof StudentFormData, string>> = {};
 
-    // Academic Info
+    // Academic Info Validation
     if (!formData.admissionNumber.trim()) {
-      newErrors.admissionNumber = 'Required';
-    } else if (!/^ADM-\d{4}-\d{3,5}$/i.test(formData.admissionNumber)) {
-      newErrors.admissionNumber = 'Format: ADM-YYYY-XXX';
+      newErrors.admissionNumber = 'Admission Number required';
     }
-
-    if (!formData.department) newErrors.department = 'Please select department';
+    if (!formData.department) newErrors.department = 'Please select a department';
     
     if (!formData.gpa.trim()) {
-      newErrors.gpa = 'Required';
+      newErrors.gpa = 'GPA is required';
     } else {
       const gpaNum = parseFloat(formData.gpa);
       if (isNaN(gpaNum) || gpaNum < 0 || gpaNum > 10) {
-        newErrors.gpa = 'Must be between 0.0 - 10.0';
+        newErrors.gpa = 'Enter GPA between 0.00 and 10.00';
       }
     }
 
-    // Personal Info
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (!formData.dob) newErrors.dob = 'DOB is required';
+    // Personal Info Validation
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full student name is required';
+    if (!formData.dob) newErrors.dob = 'Date of birth is required';
 
-    // Parent Info
-    if (!formData.fatherName.trim()) newErrors.fatherName = "Father's name required";
+    // Parent Info Validation
+    if (!formData.fatherName.trim()) newErrors.fatherName = "Father's name is required";
     if (!formData.parentPhone.trim()) {
-      newErrors.parentPhone = 'Parent phone required';
+      newErrors.parentPhone = 'Parent contact required';
     } else if (!/^\d{10}$/.test(formData.parentPhone)) {
-      newErrors.parentPhone = 'Must be 10 digits';
+      newErrors.parentPhone = 'Must be a 10-digit number';
     }
 
-    // Contact Info
+    // Contact Info Validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email';
+      newErrors.email = 'Please enter a valid email';
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone is required';
+      newErrors.phone = 'Student phone number required';
     } else if (!/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Must be 10 digits';
+      newErrors.phone = 'Must be a 10-digit number';
     }
 
-    if (!formData.city.trim()) newErrors.city = 'City required';
+    if (!formData.address.trim()) newErrors.address = 'Address is required';
+    if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.pincode.trim()) {
-      newErrors.pincode = 'PIN required';
+      newErrors.pincode = 'PIN Code required';
     } else if (!/^\d{6}$/.test(formData.pincode)) {
-      newErrors.pincode = '6 digits';
+      newErrors.pincode = 'Must be 6 digits';
     }
 
     setErrors(newErrors);
@@ -145,7 +162,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     if (!validateForm()) {
       setAlertMessage({
         type: 'error',
-        text: 'Please check the required fields highlighted below.',
+        text: 'Please fill in all required fields accurately.',
       });
       return;
     }
@@ -154,23 +171,28 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     setAlertMessage(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      setAlertMessage({
-        type: 'success',
-        text: `Student registered successfully! Admission No: ${formData.admissionNumber}`,
-      });
+      // Simulate real-time API latency
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       if (onSuccess) {
         onSuccess(formData);
       }
 
-      setFormData(initialFormData);
+      setAlertMessage({
+        type: 'success',
+        text: `Student "${formData.fullName}" (${formData.admissionNumber}) registered successfully with GPA ${formData.gpa}!`,
+      });
+
+      // Prepare next student with incremented admission number
+      setFormData({
+        ...initialFormData,
+        admissionNumber: `ADM-2026-${String(existingCount + 2).padStart(3, '0')}`,
+      });
       setErrors({});
     } catch {
       setAlertMessage({
         type: 'error',
-        text: 'Failed to submit registration. Please try again.',
+        text: 'Failed to complete registration. Please try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -178,44 +200,48 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
   };
 
   const handleReset = () => {
-    setFormData(initialFormData);
+    setFormData({
+      ...initialFormData,
+      admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
+    });
     setErrors({});
     setAlertMessage(null);
   };
 
   return (
-    <div className="compact-form-container">
+    <div className="fullscreen-form-wrapper">
+      {/* Real-time Alert Toast Banner */}
       {alertMessage && (
-        <div className={`alert-banner ${alertMessage.type} compact-alert`}>
+        <div className={`alert-banner ${alertMessage.type}`}>
           {alertMessage.type === 'success' ? (
-            <CheckCircle size={18} className="alert-icon" />
+            <CheckCircle size={20} className="alert-icon" />
           ) : (
-            <AlertCircle size={18} className="alert-icon" />
+            <AlertCircle size={20} className="alert-icon" />
           )}
           <span>{alertMessage.text}</span>
           <button className="alert-close" onClick={() => setAlertMessage(null)}>×</button>
         </div>
       )}
 
-      <form className="screen-fit-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-sections-grid">
-          {/* Card 1: Academic Information */}
-          <div className="form-card compact-card">
-            <div className="section-title compact-header">
-              <GraduationCap size={18} className="section-icon" />
+      {/* Main Full-Screen Split: Form + Real-time Live Preview Card */}
+      <div className="fullscreen-layout-grid">
+        <form className="fullscreen-form" onSubmit={handleSubmit} noValidate>
+          {/* Section 1: Academic Information */}
+          <div className="form-card fullwidth-card">
+            <div className="section-title">
+              <GraduationCap size={20} className="section-icon" />
               <div>
-                <h3>Academic Details</h3>
-                <p>Admission & Grade Info</p>
+                <h3>1. Academic Information</h3>
+                <p>Institute admission registration and performance data</p>
               </div>
             </div>
 
-            <div className="compact-grid">
+            <div className="form-grid-4col">
               <div className="form-group">
-                <label>Admission No <span className="req">*</span></label>
+                <label>Admission Number <span className="req">*</span></label>
                 <input
                   type="text"
                   name="admissionNumber"
-                  placeholder="ADM-2026-011"
                   value={formData.admissionNumber}
                   onChange={handleChange}
                   className={errors.admissionNumber ? 'input-error' : ''}
@@ -224,42 +250,43 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               </div>
 
               <div className="form-group">
-                <label>Department <span className="req">*</span></label>
+                <label>Department / Branch <span className="req">*</span></label>
                 <select
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
                   className={errors.department ? 'input-error' : ''}
                 >
-                  <option value="">-- Select --</option>
-                  <option value="Computer Science & Engineering">Computer Science</option>
-                  <option value="Information Technology">Information Tech</option>
-                  <option value="Data Science & AI">Data Science</option>
-                  <option value="Electronics & Communication">Electronics</option>
-                  <option value="Mechanical Engineering">Mechanical</option>
+                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Data Science & AI">Data Science & AI</option>
+                  <option value="Electronics & Communication">Electronics & Communication</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
                 </select>
                 {errors.department && <span className="error-text">{errors.department}</span>}
               </div>
 
               <div className="form-group">
-                <label>Semester</label>
+                <label>Current Semester</label>
                 <select name="semester" value={formData.semester} onChange={handleChange}>
                   <option value="1st Semester">1st Semester</option>
                   <option value="2nd Semester">2nd Semester</option>
                   <option value="3rd Semester">3rd Semester</option>
                   <option value="4th Semester">4th Semester</option>
+                  <option value="5th Semester">5th Semester</option>
+                  <option value="6th Semester">6th Semester</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Current GPA (0-10) <span className="req">*</span></label>
+                <label>Current GPA (0 - 10) <span className="req">*</span></label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   max="10"
                   name="gpa"
-                  placeholder="e.g. 9.45"
+                  placeholder="e.g. 9.40"
                   value={formData.gpa}
                   onChange={handleChange}
                   className={errors.gpa ? 'input-error' : ''}
@@ -269,23 +296,23 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
             </div>
           </div>
 
-          {/* Card 2: Personal Information */}
-          <div className="form-card compact-card">
-            <div className="section-title compact-header">
-              <User size={18} className="section-icon" />
+          {/* Section 2: Personal Information */}
+          <div className="form-card fullwidth-card">
+            <div className="section-title">
+              <User size={20} className="section-icon" />
               <div>
-                <h3>Personal Information</h3>
-                <p>Identity & Demographic</p>
+                <h3>2. Personal Information</h3>
+                <p>Student identity, demographic, and personal profile</p>
               </div>
             </div>
 
-            <div className="compact-grid">
-              <div className="form-group full-width">
+            <div className="form-grid-4col">
+              <div className="form-group col-span-2">
                 <label>Student Full Name <span className="req">*</span></label>
                 <input
                   type="text"
                   name="fullName"
-                  placeholder="e.g. Lokesh V"
+                  placeholder="Enter complete legal name"
                   value={formData.fullName}
                   onChange={handleChange}
                   className={errors.fullName ? 'input-error' : ''}
@@ -308,17 +335,20 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               <div className="form-group">
                 <label>Blood Group</label>
                 <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange}>
-                  <option value="">Select</option>
                   <option value="A+">A+</option>
+                  <option value="A-">A-</option>
                   <option value="B+">B+</option>
+                  <option value="B-">B-</option>
                   <option value="O+">O+</option>
+                  <option value="O-">O-</option>
                   <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
                 </select>
               </div>
 
-              <div className="form-group full-width">
+              <div className="form-group col-span-2">
                 <label>Gender <span className="req">*</span></label>
-                <div className="radio-group compact-radio">
+                <div className="radio-group">
                   {['Male', 'Female', 'Other'].map((g) => (
                     <label key={g} className="radio-label">
                       <input
@@ -333,26 +363,36 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                   ))}
                 </div>
               </div>
+
+              <div className="form-group col-span-2">
+                <label>Nationality</label>
+                <input
+                  type="text"
+                  name="nationality"
+                  value={formData.nationality}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Card 3: Parent / Guardian Info */}
-          <div className="form-card compact-card">
-            <div className="section-title compact-header">
-              <Users size={18} className="section-icon" />
+          {/* Section 3: Parent & Guardian Details */}
+          <div className="form-card fullwidth-card">
+            <div className="section-title">
+              <Users size={20} className="section-icon" />
               <div>
-                <h3>Parent Details</h3>
-                <p>Guardian & Family Contact</p>
+                <h3>3. Parent / Guardian Details</h3>
+                <p>Parent contact and family background information</p>
               </div>
             </div>
 
-            <div className="compact-grid">
-              <div className="form-group full-width">
-                <label>Father / Guardian Name <span className="req">*</span></label>
+            <div className="form-grid-4col">
+              <div className="form-group">
+                <label>Father's Name <span className="req">*</span></label>
                 <input
                   type="text"
                   name="fatherName"
-                  placeholder="Father's name"
+                  placeholder="Father's full name"
                   value={formData.fatherName}
                   onChange={handleChange}
                   className={errors.fatherName ? 'input-error' : ''}
@@ -361,11 +401,22 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               </div>
 
               <div className="form-group">
-                <label>Parent Phone <span className="req">*</span></label>
+                <label>Mother's Name</label>
+                <input
+                  type="text"
+                  name="motherName"
+                  placeholder="Mother's full name"
+                  value={formData.motherName}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Parent Contact Phone <span className="req">*</span></label>
                 <input
                   type="tel"
                   name="parentPhone"
-                  placeholder="10-digit number"
+                  placeholder="10-digit mobile number"
                   value={formData.parentPhone}
                   onChange={handleChange}
                   className={errors.parentPhone ? 'input-error' : ''}
@@ -374,11 +425,11 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               </div>
 
               <div className="form-group">
-                <label>Occupation</label>
+                <label>Parent Occupation</label>
                 <input
                   type="text"
                   name="parentOccupation"
-                  placeholder="e.g. Engineer"
+                  placeholder="e.g. Doctor, Business, Engineer"
                   value={formData.parentOccupation}
                   onChange={handleChange}
                 />
@@ -386,23 +437,23 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
             </div>
           </div>
 
-          {/* Card 4: Contact & Address */}
-          <div className="form-card compact-card">
-            <div className="section-title compact-header">
-              <Phone size={18} className="section-icon" />
+          {/* Section 4: Contact & Residential Details */}
+          <div className="form-card fullwidth-card">
+            <div className="section-title">
+              <Phone size={20} className="section-icon" />
               <div>
-                <h3>Contact Details</h3>
-                <p>Email & Communication</p>
+                <h3>4. Contact & Residential Details</h3>
+                <p>Permanent address and student communication channels</p>
               </div>
             </div>
 
-            <div className="compact-grid">
-              <div className="form-group">
-                <label>Email Address <span className="req">*</span></label>
+            <div className="form-grid-4col">
+              <div className="form-group col-span-2">
+                <label>Student Email Address <span className="req">*</span></label>
                 <input
                   type="email"
                   name="email"
-                  placeholder="student@example.com"
+                  placeholder="student.name@institute.edu"
                   value={formData.email}
                   onChange={handleChange}
                   className={errors.email ? 'input-error' : ''}
@@ -410,12 +461,12 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                 {errors.email && <span className="error-text">{errors.email}</span>}
               </div>
 
-              <div className="form-group">
-                <label>Student Phone <span className="req">*</span></label>
+              <div className="form-group col-span-2">
+                <label>Student Mobile Number <span className="req">*</span></label>
                 <input
                   type="tel"
                   name="phone"
-                  placeholder="10-digit number"
+                  placeholder="10-digit personal mobile"
                   value={formData.phone}
                   onChange={handleChange}
                   className={errors.phone ? 'input-error' : ''}
@@ -423,12 +474,25 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                 {errors.phone && <span className="error-text">{errors.phone}</span>}
               </div>
 
+              <div className="form-group col-span-2">
+                <label>Permanent Residential Address <span className="req">*</span></label>
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="House/Door No, Street Name, Landmark"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className={errors.address ? 'input-error' : ''}
+                />
+                {errors.address && <span className="error-text">{errors.address}</span>}
+              </div>
+
               <div className="form-group">
                 <label>City <span className="req">*</span></label>
                 <input
                   type="text"
                   name="city"
-                  placeholder="City"
+                  placeholder="e.g. Hyderabad"
                   value={formData.city}
                   onChange={handleChange}
                   className={errors.city ? 'input-error' : ''}
@@ -441,7 +505,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                 <input
                   type="text"
                   name="pincode"
-                  placeholder="6-digit PIN"
+                  placeholder="6-digit PIN code"
                   value={formData.pincode}
                   onChange={handleChange}
                   className={errors.pincode ? 'input-error' : ''}
@@ -450,36 +514,100 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Controls */}
-        <div className="compact-actions">
-          <button
-            type="button"
-            className="secondary-btn compact-btn"
-            onClick={handleReset}
-            disabled={isSubmitting}
-          >
-            <RotateCcw size={16} />
-            <span>Reset</span>
-          </button>
+          {/* Form Submit & Reset Actions */}
+          <div className="form-actions-bar">
+            <button
+              type="button"
+              className="secondary-btn action-btn"
+              onClick={handleReset}
+              disabled={isSubmitting}
+            >
+              <RotateCcw size={18} />
+              <span>Reset All Fields</span>
+            </button>
 
-          <button
-            type="submit"
-            className="primary-btn compact-btn submit-btn"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span>Submitting...</span>
-            ) : (
-              <>
-                <Send size={16} />
-                <span>Submit Student Registration</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+            <button
+              type="submit"
+              className="primary-btn action-btn submit-btn"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span>Registering to Real-Time System...</span>
+              ) : (
+                <>
+                  <Send size={18} />
+                  <span>Submit & Save to Real-Time Data</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Real-Time Live Student Preview Card */}
+        <aside className="realtime-preview-sidebar">
+          <div className="preview-card-sticky">
+            <div className="preview-card-header">
+              <div className="preview-title">
+                <IdCard size={20} />
+                <span>Live Student Card Preview</span>
+              </div>
+              <span className="live-tag">
+                <Sparkles size={14} /> LIVE
+              </span>
+            </div>
+
+            <div className="student-id-card">
+              <div className="id-card-top">
+                <div className="id-avatar">
+                  <User size={32} />
+                </div>
+                <div className="id-title">
+                  <h4>{formData.fullName || 'Student Name'}</h4>
+                  <span className="id-badge">#{formData.admissionNumber || 'ADM-2026-XXX'}</span>
+                </div>
+              </div>
+
+              <div className="id-divider" />
+
+              <div className="id-meta-grid">
+                <div>
+                  <small>Department</small>
+                  <p>{formData.department || 'Not selected'}</p>
+                </div>
+                <div>
+                  <small>Current GPA</small>
+                  <p className="gpa-highlight">{formData.gpa ? `${formData.gpa} / 10.0` : '--'}</p>
+                </div>
+                <div>
+                  <small>Gender & Blood</small>
+                  <p>{formData.gender} • {formData.bloodGroup}</p>
+                </div>
+                <div>
+                  <small>Semester</small>
+                  <p>{formData.semester}</p>
+                </div>
+                <div>
+                  <small>Contact Email</small>
+                  <p className="truncate-text">{formData.email || 'name@institute.edu'}</p>
+                </div>
+                <div>
+                  <small>City</small>
+                  <p>{formData.city || 'City'}</p>
+                </div>
+              </div>
+
+              <div className="id-card-footer">
+                <span>Verified Institute Student Card</span>
+              </div>
+            </div>
+
+            <div className="realtime-hint">
+              💡 <strong>Real-time Sync:</strong> As soon as you click submit, this record immediately updates the <strong>Total Students</strong>, <strong>Highest GPA</strong>, and <strong>Department counts</strong> without page refresh.
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };
