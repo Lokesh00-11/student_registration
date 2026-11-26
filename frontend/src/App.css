@@ -432,17 +432,11 @@
   width: 100%;
 }
 
-.fullscreen-layout-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
-}
-
 .fullscreen-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+  width: 100%;
 }
 
 .fullwidth-card {
