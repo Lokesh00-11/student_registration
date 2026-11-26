@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Users, 
-  Phone, 
-  GraduationCap, 
-  CheckCircle, 
-  AlertCircle, 
-  RotateCcw, 
-  Send 
+import { DEPARTMENTS } from '../constants/departments';
+import {
+  User,
+  Users,
+  Phone,
+  GraduationCap,
+  CheckCircle,
+  AlertCircle,
+  RotateCcw,
+  Send
 } from 'lucide-react';
 
 export interface StudentFormData {
@@ -70,9 +71,9 @@ interface StudentRegistrationFormProps {
   existingCount: number;
 }
 
-export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = ({ 
-  onSuccess, 
-  existingCount 
+export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = ({
+  onSuccess,
+  existingCount
 }) => {
   const [formData, setFormData] = useState<StudentFormData>(() => ({
     ...initialFormData,
@@ -117,7 +118,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
       newErrors.rollNumber = 'Student Roll Number is required';
     }
     if (!formData.department) newErrors.department = 'Please select a department';
-    
+
     if (!formData.gpa.trim()) {
       newErrors.gpa = 'GPA is required';
     } else {
@@ -371,11 +372,11 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
                 onChange={handleChange}
                 className={errors.department ? 'input-error' : ''}
               >
-                <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                <option value="Information Technology">Information Technology</option>
-                <option value="Data Science & AI">Data Science & AI</option>
-                <option value="Electronics & Communication">Electronics & Communication</option>
-                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
               </select>
               {errors.department && <span className="error-text">{errors.department}</span>}
             </div>

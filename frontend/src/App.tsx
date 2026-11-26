@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { DashboardCard } from './components/DashboardCard';
 import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
+import { DEPARTMENTS } from './constants/departments';
 import { Users, Award, BookOpen, TrendingUp, Sparkles } from 'lucide-react';
 import './App.css';
 
@@ -44,7 +45,7 @@ const defaultInitialStudents: StudentRecord[] = [
     id: 'ROLL-2026-003',
     admissionNo: 'ADM-2026-003',
     name: 'Rahul Reddy',
-    course: 'Data Science & AI',
+    course: 'Data Science',
     date: '25 Nov 2026',
     gpa: 8.90,
     gender: 'Male',
@@ -99,7 +100,7 @@ const defaultInitialStudents: StudentRecord[] = [
     id: 'ROLL-2026-008',
     admissionNo: 'ADM-2026-008',
     name: 'Divya Nair',
-    course: 'Data Science & AI',
+    course: 'Artificial Intelligence and Machine Learning',
     date: '22 Nov 2026',
     gpa: 9.30,
     gender: 'Female',
@@ -162,7 +163,9 @@ export function App() {
     students.length > 0
       ? (students.reduce((acc, s) => acc + s.gpa, 0) / totalStudents).toFixed(2)
       : '0.00';
-  const uniqueDepartmentsCount = new Set(students.map((s) => s.course)).size;
+  const uniqueDepartmentsCount = Array.from(
+    new Set([...DEPARTMENTS, ...students.map((s) => s.course)])
+  ).length;
 
   const handleStudentAdded = (newStudent: StudentFormData) => {
     const fullName = `${newStudent.firstName} ${newStudent.lastName}`.trim();
