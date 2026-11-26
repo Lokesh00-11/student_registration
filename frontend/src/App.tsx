@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { DashboardCard } from './components/DashboardCard';
 import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
-import { Users, UserPlus, BookOpen, Clock, CheckCircle } from 'lucide-react';
+import { Users, Award, BookOpen, TrendingUp } from 'lucide-react';
 import './App.css';
 
 export interface StudentRecord {
@@ -11,7 +11,7 @@ export interface StudentRecord {
   name: string;
   course: string;
   date: string;
-  status: 'Registered' | 'Pending';
+  gpa: number;
   gender: string;
   email: string;
   phone: string;
@@ -20,14 +20,14 @@ export interface StudentRecord {
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // 10 Initial Student Records
+  // 10 Students dataset with accurate GPAs
   const [students, setStudents] = useState<StudentRecord[]>([
     {
       id: 'ADM-2026-001',
       name: 'Aarav Sharma',
       course: 'Computer Science & Engineering',
       date: '26 Nov 2026',
-      status: 'Registered',
+      gpa: 9.85,
       gender: 'Male',
       email: 'aarav.sharma@example.com',
       phone: '9876543210',
@@ -37,7 +37,7 @@ export function App() {
       name: 'Sneha Patil',
       course: 'Information Technology',
       date: '26 Nov 2026',
-      status: 'Registered',
+      gpa: 9.40,
       gender: 'Female',
       email: 'sneha.patil@example.com',
       phone: '9823456789',
@@ -47,7 +47,7 @@ export function App() {
       name: 'Rahul Reddy',
       course: 'Data Science & AI',
       date: '25 Nov 2026',
-      status: 'Pending',
+      gpa: 8.90,
       gender: 'Male',
       email: 'rahul.reddy@example.com',
       phone: '9812345678',
@@ -57,7 +57,7 @@ export function App() {
       name: 'Pooja Verma',
       course: 'Electronics & Communication',
       date: '25 Nov 2026',
-      status: 'Registered',
+      gpa: 9.15,
       gender: 'Female',
       email: 'pooja.verma@example.com',
       phone: '9789012345',
@@ -67,7 +67,7 @@ export function App() {
       name: 'Karthik Raman',
       course: 'Mechanical Engineering',
       date: '24 Nov 2026',
-      status: 'Registered',
+      gpa: 8.45,
       gender: 'Male',
       email: 'karthik.raman@example.com',
       phone: '9765432109',
@@ -77,7 +77,7 @@ export function App() {
       name: 'Ananya Iyer',
       course: 'Computer Science & Engineering',
       date: '24 Nov 2026',
-      status: 'Pending',
+      gpa: 9.60,
       gender: 'Female',
       email: 'ananya.iyer@example.com',
       phone: '9712345678',
@@ -87,7 +87,7 @@ export function App() {
       name: 'Rohan Gupta',
       course: 'Information Technology',
       date: '23 Nov 2026',
-      status: 'Registered',
+      gpa: 8.75,
       gender: 'Male',
       email: 'rohan.gupta@example.com',
       phone: '9654321098',
@@ -97,7 +97,7 @@ export function App() {
       name: 'Divya Nair',
       course: 'Data Science & AI',
       date: '22 Nov 2026',
-      status: 'Registered',
+      gpa: 9.30,
       gender: 'Female',
       email: 'divya.nair@example.com',
       phone: '9612345678',
@@ -107,7 +107,7 @@ export function App() {
       name: 'Vikram Joshi',
       course: 'Electronics & Communication',
       date: '21 Nov 2026',
-      status: 'Pending',
+      gpa: 8.10,
       gender: 'Male',
       email: 'vikram.joshi@example.com',
       phone: '9543210987',
@@ -117,18 +117,21 @@ export function App() {
       name: 'Meera Deshmukh',
       course: 'Computer Science & Engineering',
       date: '20 Nov 2026',
-      status: 'Registered',
+      gpa: 9.50,
       gender: 'Female',
       email: 'meera.d@example.com',
       phone: '9512345678',
     },
   ]);
 
-  // Exact dynamic calculations from the data
+  // Accurate Dynamic Calculations
   const totalStudents = students.length;
-  const registeredCount = students.filter((s) => s.status === 'Registered').length;
-  const pendingCount = students.filter((s) => s.status === 'Pending').length;
-  const uniqueCoursesCount = new Set(students.map((s) => s.course)).size;
+  const highestGPA = students.length > 0 ? Math.max(...students.map((s) => s.gpa)) : 0;
+  const topStudent = students.find((s) => s.gpa === highestGPA);
+  const averageGPA = students.length > 0 
+    ? (students.reduce((acc, s) => acc + s.gpa, 0) / totalStudents).toFixed(2) 
+    : '0.00';
+  const uniqueDepartmentsCount = new Set(students.map((s) => s.course)).size;
 
   const handleStudentAdded = (newStudent: StudentFormData) => {
     const formatted: StudentRecord = {
@@ -142,7 +145,7 @@ export function App() {
         month: 'short',
         year: 'numeric',
       }),
-      status: 'Registered',
+      gpa: parseFloat(newStudent.gpa) || 8.0,
       gender: newStudent.gender,
       email: newStudent.email,
       phone: newStudent.phone,
@@ -161,11 +164,11 @@ export function App() {
         <Header
           title={
             activeTab === 'dashboard'
-              ? 'Student Registration Dashboard'
+              ? 'Student Academic Dashboard'
               : activeTab === 'students'
               ? 'All Registered Students'
               : activeTab === 'registration'
-              ? 'New Student Registration'
+              ? 'Student Registration'
               : activeTab.toUpperCase()
           }
         />
@@ -181,45 +184,52 @@ export function App() {
                   title="Total Students"
                   value={totalStudents}
                   icon={Users}
-                  change="Total records in database"
+                  change="Enrolled students"
                   isPositive={true}
                   color="#3b82f6"
                 />
+
                 <DashboardCard
-                  title="Verified Registrations"
-                  value={registeredCount}
-                  icon={UserPlus}
-                  change={`${Math.round((registeredCount / totalStudents) * 100)}% verified`}
+                  title="Highest GPA in Institute"
+                  value={`${highestGPA} / 10`}
+                  icon={Award}
+                  change={topStudent ? `Rank #1: ${topStudent.name}` : 'Top Performer'}
                   isPositive={true}
                   color="#10b981"
                 />
+
                 <DashboardCard
-                  title="Active Departments"
-                  value={uniqueCoursesCount}
+                  title="Average Institute GPA"
+                  value={`${averageGPA} / 10`}
+                  icon={TrendingUp}
+                  change="Batch Performance"
+                  isPositive={true}
+                  color="#f59e0b"
+                />
+
+                <DashboardCard
+                  title="Academic Departments"
+                  value={uniqueDepartmentsCount}
                   icon={BookOpen}
-                  change={`${uniqueCoursesCount} academic branches`}
+                  change={`${uniqueDepartmentsCount} active branches`}
                   isPositive={true}
                   color="#8b5cf6"
-                />
-                <DashboardCard
-                  title="Pending Verification"
-                  value={pendingCount}
-                  icon={Clock}
-                  change={`${Math.round((pendingCount / totalStudents) * 100)}% pending`}
-                  isPositive={false}
-                  color="#f59e0b"
                 />
               </section>
 
               {/* Students Table Section */}
               <section className="dashboard-sections">
-                <div className="panel recent-registrations" style={{ gridColumn: activeTab === 'students' ? '1 / -1' : undefined }}>
+                <div
+                  className="panel recent-registrations"
+                  style={{ gridColumn: activeTab === 'students' ? '1 / -1' : undefined }}
+                >
                   <div className="panel-header">
                     <h2>
-                      {activeTab === 'students' ? 'Complete Student Directory' : 'Recent Student Registrations'}
+                      {activeTab === 'students' ? 'Student Directory' : 'Student Registrations'}
                     </h2>
-                    <span className="badge">{students.length} Total Students</span>
+                    <span className="badge">{totalStudents} Students</span>
                   </div>
+
                   <div className="table-responsive">
                     <table className="data-table">
                       <thead>
@@ -227,10 +237,10 @@ export function App() {
                           <th>Admission No</th>
                           <th>Student Name</th>
                           <th>Gender</th>
-                          <th>Department / Course</th>
-                          <th>Contact (Email / Phone)</th>
+                          <th>Department</th>
+                          <th>GPA</th>
+                          <th>Contact Email</th>
                           <th>Reg Date</th>
-                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -247,30 +257,24 @@ export function App() {
                             <td>{student.gender}</td>
                             <td>{student.course}</td>
                             <td>
-                              <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                              <span
+                                className={`gpa-pill ${
+                                  student.gpa >= 9.5
+                                    ? 'gpa-top'
+                                    : student.gpa >= 9.0
+                                    ? 'gpa-high'
+                                    : 'gpa-standard'
+                                }`}
+                              >
+                                {student.gpa.toFixed(2)}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ fontSize: '0.82rem', color: '#475569' }}>
                                 {student.email}
-                              </div>
-                              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                +91 {student.phone}
                               </div>
                             </td>
                             <td>{student.date}</td>
-                            <td>
-                              <span
-                                className={`status-tag ${
-                                  student.status === 'Registered'
-                                    ? 'status-success'
-                                    : 'status-pending'
-                                }`}
-                              >
-                                {student.status === 'Registered' ? (
-                                  <CheckCircle size={14} />
-                                ) : (
-                                  <Clock size={14} />
-                                )}
-                                {student.status}
-                              </span>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -281,24 +285,21 @@ export function App() {
                 {activeTab !== 'students' && (
                   <div className="panel quick-actions">
                     <div className="panel-header">
-                      <h2>System Metrics</h2>
+                      <h2>Academic Summary</h2>
                     </div>
                     <div className="quick-info-box">
                       <p>
-                        <strong>Total Records:</strong> {totalStudents}
+                        <strong>Total Enrolled:</strong> {totalStudents} Students
                       </p>
                       <p>
-                        <strong>Active Status:</strong> {registeredCount} Registered
+                        <strong>Highest GPA:</strong> {highestGPA} (
+                        {topStudent?.name})
                       </p>
                       <p>
-                        <strong>Action Needed:</strong> {pendingCount} Pending
+                        <strong>Average GPA:</strong> {averageGPA}
                       </p>
                       <p>
-                        <strong>Verification Rate:</strong>{' '}
-                        {Math.round((registeredCount / totalStudents) * 100)}%
-                      </p>
-                      <p>
-                        <strong>Courses Offered:</strong> {uniqueCoursesCount}
+                        <strong>Departments:</strong> {uniqueDepartmentsCount}
                       </p>
                       <hr className="divider" />
                       <button
