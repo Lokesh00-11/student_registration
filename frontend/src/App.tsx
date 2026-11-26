@@ -154,9 +154,17 @@ export function App() {
       const saved = localStorage.getItem('edu_realtime_students');
       if (saved) {
         const parsed: StudentRecord[] = JSON.parse(saved);
-        return parsed.map((s) => ({
+        return parsed.map((s, idx) => ({
           ...s,
-          course: s.course === 'Data Science & AI' ? 'Data Science' : s.course,
+          id: s.id || `ROLL-2026-${String(idx + 1).padStart(3, '0')}`,
+          admissionNo: s.admissionNo || `ADM-2026-${String(idx + 1).padStart(3, '0')}`,
+          name: s.name || 'Student',
+          course: s.course === 'Data Science & AI' ? 'Data Science' : (s.course || 'General'),
+          gpa: typeof s.gpa === 'number' ? s.gpa : (parseFloat(String(s.gpa)) || 8.0),
+          email: s.email || '',
+          phone: s.phone || '',
+          gender: s.gender || 'Other',
+          date: s.date || '26 Nov 2026',
         }));
       }
     } catch {
@@ -209,11 +217,26 @@ export function App() {
   // Filtered Students for the All Students page
   const filteredStudents = students.filter((student) => {
     const query = searchQuery.trim().toLowerCase();
+    const cleanQuery = query.startsWith('#') ? query.slice(1).trim() : query;
+
+    // Safe fallbacks to prevent any undefined crashes
+    const name = String(student.name || '').toLowerCase();
+    const rollNo = String(student.id || '').toLowerCase();
+    const admNo = String(student.admissionNo || '').toLowerCase();
+    const course = String(student.course || '').toLowerCase();
+    const email = String(student.email || '').toLowerCase();
+    const phone = String(student.phone || '');
+
     const matchesSearch =
       query === '' ||
-      student.name.toLowerCase().includes(query) ||
-      student.id.toLowerCase().includes(query) ||
-      student.admissionNo.toLowerCase().includes(query);
+      name.includes(query) ||
+      rollNo.includes(query) ||
+      rollNo.includes(cleanQuery) ||
+      admNo.includes(query) ||
+      admNo.includes(cleanQuery) ||
+      course.includes(query) ||
+      email.includes(query) ||
+      phone.includes(query);
 
     const matchesCourse =
       selectedCourseFilter === 'ALL' || student.course === selectedCourseFilter;
