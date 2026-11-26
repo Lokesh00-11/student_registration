@@ -139,7 +139,12 @@ export function App() {
     try {
       const saved = localStorage.getItem('edu_realtime_students');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed: StudentRecord[] = JSON.parse(saved);
+        // Normalize any old cached department names
+        return parsed.map((s) => ({
+          ...s,
+          course: s.course === 'Data Science & AI' ? 'Data Science' : s.course,
+        }));
       }
     } catch {
       // Fallback
@@ -163,9 +168,7 @@ export function App() {
     students.length > 0
       ? (students.reduce((acc, s) => acc + s.gpa, 0) / totalStudents).toFixed(2)
       : '0.00';
-  const uniqueDepartmentsCount = Array.from(
-    new Set([...DEPARTMENTS, ...students.map((s) => s.course)])
-  ).length;
+  const uniqueDepartmentsCount = DEPARTMENTS.length;
 
   const handleStudentAdded = (newStudent: StudentFormData) => {
     const fullName = `${newStudent.firstName} ${newStudent.lastName}`.trim();
