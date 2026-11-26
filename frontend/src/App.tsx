@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { DashboardCard } from './components/DashboardCard';
 import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
-import { Users, Award, BookOpen, TrendingUp, Sparkles, GraduationCap } from 'lucide-react';
+import { Users, Award, BookOpen, TrendingUp, Sparkles } from 'lucide-react';
 import './App.css';
 
 export interface StudentRecord {
-  id: string;
+  id: string; // Roll Number
+  admissionNo: string;
   name: string;
   course: string;
   date: string;
@@ -19,6 +20,7 @@ export interface StudentRecord {
 const defaultInitialStudents: StudentRecord[] = [
   {
     id: 'ROLL-2026-001',
+    admissionNo: 'ADM-2026-001',
     name: 'Aarav Sharma',
     course: 'Computer Science & Engineering',
     date: '26 Nov 2026',
@@ -29,6 +31,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-002',
+    admissionNo: 'ADM-2026-002',
     name: 'Sneha Patil',
     course: 'Information Technology',
     date: '26 Nov 2026',
@@ -39,6 +42,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-003',
+    admissionNo: 'ADM-2026-003',
     name: 'Rahul Reddy',
     course: 'Data Science & AI',
     date: '25 Nov 2026',
@@ -49,6 +53,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-004',
+    admissionNo: 'ADM-2026-004',
     name: 'Pooja Verma',
     course: 'Electronics & Communication',
     date: '25 Nov 2026',
@@ -59,6 +64,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-005',
+    admissionNo: 'ADM-2026-005',
     name: 'Karthik Raman',
     course: 'Mechanical Engineering',
     date: '24 Nov 2026',
@@ -69,6 +75,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-006',
+    admissionNo: 'ADM-2026-006',
     name: 'Ananya Iyer',
     course: 'Computer Science & Engineering',
     date: '24 Nov 2026',
@@ -79,6 +86,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-007',
+    admissionNo: 'ADM-2026-007',
     name: 'Rohan Gupta',
     course: 'Information Technology',
     date: '23 Nov 2026',
@@ -89,6 +97,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-008',
+    admissionNo: 'ADM-2026-008',
     name: 'Divya Nair',
     course: 'Data Science & AI',
     date: '22 Nov 2026',
@@ -99,6 +108,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-009',
+    admissionNo: 'ADM-2026-009',
     name: 'Vikram Joshi',
     course: 'Electronics & Communication',
     date: '21 Nov 2026',
@@ -109,6 +119,7 @@ const defaultInitialStudents: StudentRecord[] = [
   },
   {
     id: 'ROLL-2026-010',
+    admissionNo: 'ADM-2026-010',
     name: 'Meera Deshmukh',
     course: 'Computer Science & Engineering',
     date: '20 Nov 2026',
@@ -159,6 +170,7 @@ export function App() {
       id: newStudent.rollNumber.startsWith('#')
         ? newStudent.rollNumber.replace('#', '')
         : newStudent.rollNumber,
+      admissionNo: newStudent.admissionNumber,
       name: fullName,
       course: newStudent.department,
       date: new Date().toLocaleDateString('en-GB', {
@@ -187,10 +199,10 @@ export function App() {
       {/* Sidebar Navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Content Area (Header Removed) */}
+      {/* Main Content Area */}
       <div className="main-wrapper headerless-main">
         <main className="content-container">
-          {/* Top Page Header Title */}
+          {/* Top Page Title Bar (Header and right-side icon removed) */}
           <div className="page-top-bar">
             <div>
               <h1 className="page-main-heading">
@@ -206,14 +218,9 @@ export function App() {
                 {activeTab === 'dashboard'
                   ? 'Real-time performance metrics and student directory'
                   : activeTab === 'registration'
-                  ? 'Enter personal, academic, father and contact information'
+                  ? 'Enter personal, academic, parent and contact information'
                   : 'Institute student directory'}
               </p>
-            </div>
-
-            <div className="top-bar-badge">
-              <GraduationCap size={20} />
-              <span>Institute Portal</span>
             </div>
           </div>
 
@@ -285,7 +292,7 @@ export function App() {
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Roll Number</th>
+                          <th>Roll No / Admission No</th>
                           <th>Student Name</th>
                           <th>Gender</th>
                           <th>Department</th>
@@ -301,6 +308,9 @@ export function App() {
                               <strong style={{ color: 'var(--primary-color)' }}>
                                 #{student.id}
                               </strong>
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                                {student.admissionNo}
+                              </div>
                             </td>
                             <td>
                               <div style={{ fontWeight: 600 }}>{student.name}</div>

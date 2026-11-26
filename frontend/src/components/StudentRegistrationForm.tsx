@@ -20,13 +20,15 @@ export interface StudentFormData {
   nationality: string;
 
   // Academic Information
+  admissionNumber: string;
   rollNumber: string;
   department: string;
   semester: string;
   gpa: string;
 
-  // Parent / Guardian Information (Father only)
+  // Parent / Guardian Information
   fatherName: string;
+  motherName: string;
   fatherOccupation: string;
   parentPhone: string;
 
@@ -46,11 +48,13 @@ const initialFormData: StudentFormData = {
   gender: 'Male',
   bloodGroup: 'O+',
   nationality: 'Indian',
+  admissionNumber: '',
   rollNumber: '',
   department: 'Computer Science & Engineering',
   semester: '1st Semester',
   gpa: '9.20',
   fatherName: '',
+  motherName: '',
   fatherOccupation: '',
   parentPhone: '',
   email: '',
@@ -72,6 +76,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 }) => {
   const [formData, setFormData] = useState<StudentFormData>(() => ({
     ...initialFormData,
+    admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
     rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
   }));
 
@@ -104,7 +109,10 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.dob) newErrors.dob = 'Date of birth is required';
 
-    // 2. Academic Info Validation (Student Roll Number)
+    // 2. Academic Info Validation (Admission Number & Roll Number)
+    if (!formData.admissionNumber.trim()) {
+      newErrors.admissionNumber = 'Admission Number is required';
+    }
     if (!formData.rollNumber.trim()) {
       newErrors.rollNumber = 'Student Roll Number is required';
     }
@@ -119,8 +127,9 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
       }
     }
 
-    // 3. Parent Info Validation (Father details)
+    // 3. Parent Info Validation (Father + Mother details)
     if (!formData.fatherName.trim()) newErrors.fatherName = "Father's name is required";
+    if (!formData.motherName.trim()) newErrors.motherName = "Mother's name is required";
     if (!formData.fatherOccupation.trim()) newErrors.fatherOccupation = "Father's occupation is required";
     if (!formData.parentPhone.trim()) {
       newErrors.parentPhone = 'Parent contact phone is required';
@@ -177,12 +186,13 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
       const studentFullName = `${formData.firstName} ${formData.lastName}`.trim();
       setAlertMessage({
         type: 'success',
-        text: `Student "${studentFullName}" (Roll No: ${formData.rollNumber}) registered successfully with GPA ${formData.gpa}!`,
+        text: `Student "${studentFullName}" (Roll: ${formData.rollNumber}, Adm: ${formData.admissionNumber}) registered successfully with GPA ${formData.gpa}!`,
       });
 
-      // Prepare next student record
+      // Prepare next student record with auto-increment
       setFormData({
         ...initialFormData,
+        admissionNumber: `ADM-2026-${String(existingCount + 2).padStart(3, '0')}`,
         rollNumber: `ROLL-2026-${String(existingCount + 2).padStart(3, '0')}`,
       });
       setErrors({});
@@ -199,6 +209,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
   const handleReset = () => {
     setFormData({
       ...initialFormData,
+      admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
       rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
     });
     setErrors({});
@@ -315,18 +326,31 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* SECTION 2: Academic Information (SECOND - Student Roll Number) */}
+        {/* SECTION 2: Academic Information (SECOND - Admission No + Roll No) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
             <GraduationCap size={22} className="section-icon" />
             <div>
               <h3>2. Academic Information</h3>
-              <p>Institute admission registration, branch, and GPA grading</p>
+              <p>Institute admission registration, student roll number, and GPA grading</p>
             </div>
           </div>
 
           <div className="form-grid-4col">
-            <div className="form-group">
+            <div className="form-group col-span-2">
+              <label>Admission Number <span className="req">*</span></label>
+              <input
+                type="text"
+                name="admissionNumber"
+                placeholder="e.g. ADM-2026-011"
+                value={formData.admissionNumber}
+                onChange={handleChange}
+                className={errors.admissionNumber ? 'input-error' : ''}
+              />
+              {errors.admissionNumber && <span className="error-text">{errors.admissionNumber}</span>}
+            </div>
+
+            <div className="form-group col-span-2">
               <label>Student Roll Number <span className="req">*</span></label>
               <input
                 type="text"
@@ -339,7 +363,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               {errors.rollNumber && <span className="error-text">{errors.rollNumber}</span>}
             </div>
 
-            <div className="form-group">
+            <div className="form-group col-span-2">
               <label>Department / Branch <span className="req">*</span></label>
               <select
                 name="department"
@@ -386,13 +410,13 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* SECTION 3: Parent Details (THIRD - Father details only) */}
+        {/* SECTION 3: Parent / Guardian Details (THIRD - Father + Mother) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
             <Users size={22} className="section-icon" />
             <div>
               <h3>3. Parent / Guardian Details</h3>
-              <p>Father's information and primary emergency contact</p>
+              <p>Father and Mother information with primary contact</p>
             </div>
           </div>
 
@@ -410,7 +434,20 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               {errors.fatherName && <span className="error-text">{errors.fatherName}</span>}
             </div>
 
-            <div className="form-group">
+            <div className="form-group col-span-2">
+              <label>Mother's Name <span className="req">*</span></label>
+              <input
+                type="text"
+                name="motherName"
+                placeholder="Enter mother's full name"
+                value={formData.motherName}
+                onChange={handleChange}
+                className={errors.motherName ? 'input-error' : ''}
+              />
+              {errors.motherName && <span className="error-text">{errors.motherName}</span>}
+            </div>
+
+            <div className="form-group col-span-2">
               <label>Father's Occupation <span className="req">*</span></label>
               <input
                 type="text"
@@ -423,7 +460,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               {errors.fatherOccupation && <span className="error-text">{errors.fatherOccupation}</span>}
             </div>
 
-            <div className="form-group">
+            <div className="form-group col-span-2">
               <label>Parent Contact Phone <span className="req">*</span></label>
               <input
                 type="tel"
