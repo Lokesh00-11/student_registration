@@ -12,23 +12,23 @@ import {
 
 export interface StudentFormData {
   // Personal Information
-  fullName: string;
+  firstName: string;
+  lastName: string;
   dob: string;
   gender: string;
   bloodGroup: string;
   nationality: string;
 
   // Academic Information
-  admissionNumber: string;
+  rollNumber: string;
   department: string;
   semester: string;
   gpa: string;
 
-  // Parent / Guardian Information
+  // Parent / Guardian Information (Father only)
   fatherName: string;
-  motherName: string;
+  fatherOccupation: string;
   parentPhone: string;
-  parentOccupation: string;
 
   // Contact Information
   email: string;
@@ -40,19 +40,19 @@ export interface StudentFormData {
 }
 
 const initialFormData: StudentFormData = {
-  fullName: '',
+  firstName: '',
+  lastName: '',
   dob: '',
   gender: 'Male',
   bloodGroup: 'O+',
   nationality: 'Indian',
-  admissionNumber: '',
+  rollNumber: '',
   department: 'Computer Science & Engineering',
   semester: '1st Semester',
   gpa: '9.20',
   fatherName: '',
-  motherName: '',
+  fatherOccupation: '',
   parentPhone: '',
-  parentOccupation: '',
   email: '',
   phone: '',
   address: '',
@@ -72,7 +72,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 }) => {
   const [formData, setFormData] = useState<StudentFormData>(() => ({
     ...initialFormData,
-    admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
+    rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
   }));
 
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormData, string>>>({});
@@ -100,12 +100,13 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     const newErrors: Partial<Record<keyof StudentFormData, string>> = {};
 
     // 1. Personal Info Validation
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full student name is required';
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.dob) newErrors.dob = 'Date of birth is required';
 
-    // 2. Academic Info Validation
-    if (!formData.admissionNumber.trim()) {
-      newErrors.admissionNumber = 'Admission Number required';
+    // 2. Academic Info Validation (Student Roll Number)
+    if (!formData.rollNumber.trim()) {
+      newErrors.rollNumber = 'Student Roll Number is required';
     }
     if (!formData.department) newErrors.department = 'Please select a department';
     
@@ -118,10 +119,11 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
       }
     }
 
-    // 3. Parent Info Validation
+    // 3. Parent Info Validation (Father details)
     if (!formData.fatherName.trim()) newErrors.fatherName = "Father's name is required";
+    if (!formData.fatherOccupation.trim()) newErrors.fatherOccupation = "Father's occupation is required";
     if (!formData.parentPhone.trim()) {
-      newErrors.parentPhone = 'Parent contact required';
+      newErrors.parentPhone = 'Parent contact phone is required';
     } else if (!/^\d{10}$/.test(formData.parentPhone)) {
       newErrors.parentPhone = 'Must be a 10-digit number';
     }
@@ -134,7 +136,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Student phone number required';
+      newErrors.phone = 'Student phone number is required';
     } else if (!/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = 'Must be a 10-digit number';
     }
@@ -142,7 +144,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.pincode.trim()) {
-      newErrors.pincode = 'PIN Code required';
+      newErrors.pincode = 'PIN Code is required';
     } else if (!/^\d{6}$/.test(formData.pincode)) {
       newErrors.pincode = 'Must be 6 digits';
     }
@@ -172,15 +174,16 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
         onSuccess(formData);
       }
 
+      const studentFullName = `${formData.firstName} ${formData.lastName}`.trim();
       setAlertMessage({
         type: 'success',
-        text: `Student "${formData.fullName}" (${formData.admissionNumber}) registered successfully with GPA ${formData.gpa}!`,
+        text: `Student "${studentFullName}" (Roll No: ${formData.rollNumber}) registered successfully with GPA ${formData.gpa}!`,
       });
 
       // Prepare next student record
       setFormData({
         ...initialFormData,
-        admissionNumber: `ADM-2026-${String(existingCount + 2).padStart(3, '0')}`,
+        rollNumber: `ROLL-2026-${String(existingCount + 2).padStart(3, '0')}`,
       });
       setErrors({});
     } catch {
@@ -196,7 +199,7 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
   const handleReset = () => {
     setFormData({
       ...initialFormData,
-      admissionNumber: `ADM-2026-${String(existingCount + 1).padStart(3, '0')}`,
+      rollNumber: `ROLL-2026-${String(existingCount + 1).padStart(3, '0')}`,
     });
     setErrors({});
     setAlertMessage(null);
@@ -219,10 +222,10 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 
       {/* Full-Screen Form */}
       <form className="fullscreen-form" onSubmit={handleSubmit} noValidate>
-        {/* SECTION 1: Personal Information (FIRST) */}
+        {/* SECTION 1: Personal Information (FIRST - First Name & Last Name) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
-            <User size={20} className="section-icon" />
+            <User size={22} className="section-icon" />
             <div>
               <h3>1. Personal Information</h3>
               <p>Student identity, demographic profile, and legal details</p>
@@ -231,16 +234,29 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 
           <div className="form-grid-4col">
             <div className="form-group col-span-2">
-              <label>Student Full Name <span className="req">*</span></label>
+              <label>First Name <span className="req">*</span></label>
               <input
                 type="text"
-                name="fullName"
-                placeholder="Enter complete legal name"
-                value={formData.fullName}
+                name="firstName"
+                placeholder="Enter student first name"
+                value={formData.firstName}
                 onChange={handleChange}
-                className={errors.fullName ? 'input-error' : ''}
+                className={errors.firstName ? 'input-error' : ''}
               />
-              {errors.fullName && <span className="error-text">{errors.fullName}</span>}
+              {errors.firstName && <span className="error-text">{errors.firstName}</span>}
+            </div>
+
+            <div className="form-group col-span-2">
+              <label>Last Name <span className="req">*</span></label>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Enter student last name"
+                value={formData.lastName}
+                onChange={handleChange}
+                className={errors.lastName ? 'input-error' : ''}
+              />
+              {errors.lastName && <span className="error-text">{errors.lastName}</span>}
             </div>
 
             <div className="form-group">
@@ -299,10 +315,10 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* SECTION 2: Academic Information (SECOND) */}
+        {/* SECTION 2: Academic Information (SECOND - Student Roll Number) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
-            <GraduationCap size={20} className="section-icon" />
+            <GraduationCap size={22} className="section-icon" />
             <div>
               <h3>2. Academic Information</h3>
               <p>Institute admission registration, branch, and GPA grading</p>
@@ -311,15 +327,16 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
 
           <div className="form-grid-4col">
             <div className="form-group">
-              <label>Admission Number <span className="req">*</span></label>
+              <label>Student Roll Number <span className="req">*</span></label>
               <input
                 type="text"
-                name="admissionNumber"
-                value={formData.admissionNumber}
+                name="rollNumber"
+                placeholder="e.g. ROLL-2026-011"
+                value={formData.rollNumber}
                 onChange={handleChange}
-                className={errors.admissionNumber ? 'input-error' : ''}
+                className={errors.rollNumber ? 'input-error' : ''}
               />
-              {errors.admissionNumber && <span className="error-text">{errors.admissionNumber}</span>}
+              {errors.rollNumber && <span className="error-text">{errors.rollNumber}</span>}
             </div>
 
             <div className="form-group">
@@ -369,23 +386,23 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
           </div>
         </div>
 
-        {/* SECTION 3: Parent / Guardian Details (THIRD) */}
+        {/* SECTION 3: Parent Details (THIRD - Father details only) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
-            <Users size={20} className="section-icon" />
+            <Users size={22} className="section-icon" />
             <div>
               <h3>3. Parent / Guardian Details</h3>
-              <p>Parent contact and family background information</p>
+              <p>Father's information and primary emergency contact</p>
             </div>
           </div>
 
           <div className="form-grid-4col">
-            <div className="form-group">
+            <div className="form-group col-span-2">
               <label>Father's Name <span className="req">*</span></label>
               <input
                 type="text"
                 name="fatherName"
-                placeholder="Father's full name"
+                placeholder="Enter father's full name"
                 value={formData.fatherName}
                 onChange={handleChange}
                 className={errors.fatherName ? 'input-error' : ''}
@@ -394,14 +411,16 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
             </div>
 
             <div className="form-group">
-              <label>Mother's Name</label>
+              <label>Father's Occupation <span className="req">*</span></label>
               <input
                 type="text"
-                name="motherName"
-                placeholder="Mother's full name"
-                value={formData.motherName}
+                name="fatherOccupation"
+                placeholder="e.g. Engineer, Business, Doctor"
+                value={formData.fatherOccupation}
                 onChange={handleChange}
+                className={errors.fatherOccupation ? 'input-error' : ''}
               />
+              {errors.fatherOccupation && <span className="error-text">{errors.fatherOccupation}</span>}
             </div>
 
             <div className="form-group">
@@ -416,24 +435,13 @@ export const StudentRegistrationForm: React.FC<StudentRegistrationFormProps> = (
               />
               {errors.parentPhone && <span className="error-text">{errors.parentPhone}</span>}
             </div>
-
-            <div className="form-group">
-              <label>Parent Occupation</label>
-              <input
-                type="text"
-                name="parentOccupation"
-                placeholder="e.g. Doctor, Business, Engineer"
-                value={formData.parentOccupation}
-                onChange={handleChange}
-              />
-            </div>
           </div>
         </div>
 
         {/* SECTION 4: Contact & Residential Details (FOURTH) */}
         <div className="form-card fullwidth-card">
           <div className="section-title">
-            <Phone size={20} className="section-icon" />
+            <Phone size={22} className="section-icon" />
             <div>
               <h3>4. Contact & Residential Details</h3>
               <p>Permanent address and student communication channels</p>

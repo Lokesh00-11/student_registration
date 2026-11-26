@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
 import { DashboardCard } from './components/DashboardCard';
 import { StudentRegistrationForm, type StudentFormData } from './components/StudentRegistrationForm';
-import { Users, Award, BookOpen, TrendingUp, Sparkles } from 'lucide-react';
+import { Users, Award, BookOpen, TrendingUp, Sparkles, GraduationCap } from 'lucide-react';
 import './App.css';
 
 export interface StudentRecord {
@@ -19,7 +18,7 @@ export interface StudentRecord {
 
 const defaultInitialStudents: StudentRecord[] = [
   {
-    id: 'ADM-2026-001',
+    id: 'ROLL-2026-001',
     name: 'Aarav Sharma',
     course: 'Computer Science & Engineering',
     date: '26 Nov 2026',
@@ -29,7 +28,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9876543210',
   },
   {
-    id: 'ADM-2026-002',
+    id: 'ROLL-2026-002',
     name: 'Sneha Patil',
     course: 'Information Technology',
     date: '26 Nov 2026',
@@ -39,7 +38,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9823456789',
   },
   {
-    id: 'ADM-2026-003',
+    id: 'ROLL-2026-003',
     name: 'Rahul Reddy',
     course: 'Data Science & AI',
     date: '25 Nov 2026',
@@ -49,7 +48,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9812345678',
   },
   {
-    id: 'ADM-2026-004',
+    id: 'ROLL-2026-004',
     name: 'Pooja Verma',
     course: 'Electronics & Communication',
     date: '25 Nov 2026',
@@ -59,7 +58,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9789012345',
   },
   {
-    id: 'ADM-2026-005',
+    id: 'ROLL-2026-005',
     name: 'Karthik Raman',
     course: 'Mechanical Engineering',
     date: '24 Nov 2026',
@@ -69,7 +68,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9765432109',
   },
   {
-    id: 'ADM-2026-006',
+    id: 'ROLL-2026-006',
     name: 'Ananya Iyer',
     course: 'Computer Science & Engineering',
     date: '24 Nov 2026',
@@ -79,7 +78,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9712345678',
   },
   {
-    id: 'ADM-2026-007',
+    id: 'ROLL-2026-007',
     name: 'Rohan Gupta',
     course: 'Information Technology',
     date: '23 Nov 2026',
@@ -89,7 +88,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9654321098',
   },
   {
-    id: 'ADM-2026-008',
+    id: 'ROLL-2026-008',
     name: 'Divya Nair',
     course: 'Data Science & AI',
     date: '22 Nov 2026',
@@ -99,7 +98,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9612345678',
   },
   {
-    id: 'ADM-2026-009',
+    id: 'ROLL-2026-009',
     name: 'Vikram Joshi',
     course: 'Electronics & Communication',
     date: '21 Nov 2026',
@@ -109,7 +108,7 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9543210987',
   },
   {
-    id: 'ADM-2026-010',
+    id: 'ROLL-2026-010',
     name: 'Meera Deshmukh',
     course: 'Computer Science & Engineering',
     date: '20 Nov 2026',
@@ -136,7 +135,6 @@ export function App() {
     return defaultInitialStudents;
   });
 
-  // Sync to localStorage on every change
   useEffect(() => {
     try {
       localStorage.setItem('edu_realtime_students', JSON.stringify(students));
@@ -156,11 +154,12 @@ export function App() {
   const uniqueDepartmentsCount = new Set(students.map((s) => s.course)).size;
 
   const handleStudentAdded = (newStudent: StudentFormData) => {
+    const fullName = `${newStudent.firstName} ${newStudent.lastName}`.trim();
     const formatted: StudentRecord = {
-      id: newStudent.admissionNumber.startsWith('#')
-        ? newStudent.admissionNumber.replace('#', '')
-        : newStudent.admissionNumber,
-      name: newStudent.fullName,
+      id: newStudent.rollNumber.startsWith('#')
+        ? newStudent.rollNumber.replace('#', '')
+        : newStudent.rollNumber,
+      name: fullName,
       course: newStudent.department,
       date: new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
@@ -188,21 +187,36 @@ export function App() {
       {/* Sidebar Navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Content Area */}
-      <div className="main-wrapper">
-        <Header
-          title={
-            activeTab === 'dashboard'
-              ? 'Student Academic Dashboard'
-              : activeTab === 'students'
-              ? 'All Registered Students'
-              : activeTab === 'registration'
-              ? 'Student Registration (Real-Time System)'
-              : activeTab.toUpperCase()
-          }
-        />
-
+      {/* Main Content Area (Header Removed) */}
+      <div className="main-wrapper headerless-main">
         <main className="content-container">
+          {/* Top Page Header Title */}
+          <div className="page-top-bar">
+            <div>
+              <h1 className="page-main-heading">
+                {activeTab === 'dashboard'
+                  ? 'Student Academic Dashboard'
+                  : activeTab === 'students'
+                  ? 'All Registered Students'
+                  : activeTab === 'registration'
+                  ? 'Student Registration'
+                  : activeTab.toUpperCase()}
+              </h1>
+              <p className="page-sub-heading">
+                {activeTab === 'dashboard'
+                  ? 'Real-time performance metrics and student directory'
+                  : activeTab === 'registration'
+                  ? 'Enter personal, academic, father and contact information'
+                  : 'Institute student directory'}
+              </p>
+            </div>
+
+            <div className="top-bar-badge">
+              <GraduationCap size={20} />
+              <span>Institute Portal</span>
+            </div>
+          </div>
+
           {activeTab === 'registration' ? (
             <StudentRegistrationForm 
               onSuccess={handleStudentAdded} 
@@ -271,7 +285,7 @@ export function App() {
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Admission No</th>
+                          <th>Roll Number</th>
                           <th>Student Name</th>
                           <th>Gender</th>
                           <th>Department</th>
@@ -307,10 +321,10 @@ export function App() {
                               </span>
                             </td>
                             <td>
-                              <div style={{ fontSize: '0.82rem', color: '#475569' }}>
+                              <div style={{ fontSize: '0.86rem', color: '#475569' }}>
                                 {student.email}
                               </div>
-                              <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
                                 +91 {student.phone}
                               </div>
                             </td>
