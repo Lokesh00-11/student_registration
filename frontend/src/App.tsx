@@ -187,13 +187,6 @@ export function App() {
     setStudents((prev) => [formatted, ...prev]);
   };
 
-  const handleResetData = () => {
-    if (confirm('Reset to initial 10 students data?')) {
-      setStudents(defaultInitialStudents);
-      localStorage.removeItem('edu_realtime_students');
-    }
-  };
-
   return (
     <div className="app-layout">
       {/* Sidebar Navigation */}
@@ -371,13 +364,6 @@ export function App() {
                         onClick={() => setActiveTab('registration')}
                       >
                         + Register New Student
-                      </button>
-                      <button
-                        className="secondary-btn"
-                        style={{ width: '100%', marginTop: '10px', justifyContent: 'center' }}
-                        onClick={handleResetData}
-                      >
-                        Reset Initial 10 Records
                       </button>
                     </div>
                   </div>
