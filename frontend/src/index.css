@@ -13,8 +13,8 @@
   --border-color: #e2e8f0;
   --primary-color: #3b82f6;
   --primary-hover: #2563eb;
-  --sidebar-width: 260px;
-  --header-height: 70px;
+  --sidebar-width: 270px;
+  --header-height: 74px;
 }
 
 body {
@@ -22,5 +22,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
