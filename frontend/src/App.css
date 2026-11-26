@@ -177,7 +177,7 @@
   border-radius: 12px;
   padding: 22px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .card-top {
@@ -256,19 +256,6 @@
   border-radius: 14px;
   color: var(--text-secondary);
   font-weight: 600;
-}
-
-.live-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #ecfdf5;
-  color: #059669;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid #a7f3d0;
 }
 
 /* Tables */
@@ -358,9 +345,7 @@
   background-color: var(--primary-hover);
 }
 
-/* ====================================================
-   FULL-SCREEN REAL-TIME STUDENT REGISTRATION FORM
-   ==================================================== */
+
 .fullscreen-form-wrapper {
   width: 100%;
 }
@@ -377,7 +362,7 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 24px 28px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .section-title {
@@ -731,7 +716,7 @@
 .course-stat-card:hover {
   border-color: #cbd5e1;
   background-color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .course-card-header {

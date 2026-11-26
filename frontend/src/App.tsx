@@ -8,7 +8,6 @@ import {
   Award, 
   BookOpen, 
   TrendingUp, 
-  Sparkles, 
   Search, 
   Filter, 
   RotateCw, 
@@ -17,8 +16,9 @@ import {
 import './App.css';
 
 export interface StudentRecord {
-  id: string; // Roll Number
+  id: string; // unique key
   admissionNo: string;
+  rollNo: string;
   name: string;
   course: string;
   date: string;
@@ -30,8 +30,9 @@ export interface StudentRecord {
 
 const defaultInitialStudents: StudentRecord[] = [
   {
-    id: 'ROLL-2026-001',
+    id: 'ADM-2026-001',
     admissionNo: 'ADM-2026-001',
+    rollNo: 'ROLL-2026-001',
     name: 'Aarav Sharma',
     course: 'Computer Science & Engineering',
     date: '26 Nov 2026',
@@ -41,8 +42,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9876543210',
   },
   {
-    id: 'ROLL-2026-002',
+    id: 'ADM-2026-002',
     admissionNo: 'ADM-2026-002',
+    rollNo: 'ROLL-2026-002',
     name: 'Sneha Patil',
     course: 'Information Technology',
     date: '26 Nov 2026',
@@ -52,8 +54,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9823456789',
   },
   {
-    id: 'ROLL-2026-003',
+    id: 'ADM-2026-003',
     admissionNo: 'ADM-2026-003',
+    rollNo: 'ROLL-2026-003',
     name: 'Rahul Reddy',
     course: 'Data Science',
     date: '25 Nov 2026',
@@ -63,8 +66,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9812345678',
   },
   {
-    id: 'ROLL-2026-004',
+    id: 'ADM-2026-004',
     admissionNo: 'ADM-2026-004',
+    rollNo: 'ROLL-2026-004',
     name: 'Pooja Verma',
     course: 'Electronics & Communication',
     date: '25 Nov 2026',
@@ -74,8 +78,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9789012345',
   },
   {
-    id: 'ROLL-2026-005',
+    id: 'ADM-2026-005',
     admissionNo: 'ADM-2026-005',
+    rollNo: 'ROLL-2026-005',
     name: 'Karthik Raman',
     course: 'Mechanical Engineering',
     date: '24 Nov 2026',
@@ -85,8 +90,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9765432109',
   },
   {
-    id: 'ROLL-2026-006',
+    id: 'ADM-2026-006',
     admissionNo: 'ADM-2026-006',
+    rollNo: 'ROLL-2026-006',
     name: 'Ananya Iyer',
     course: 'Computer Science & Engineering',
     date: '24 Nov 2026',
@@ -96,8 +102,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9712345678',
   },
   {
-    id: 'ROLL-2026-007',
+    id: 'ADM-2026-007',
     admissionNo: 'ADM-2026-007',
+    rollNo: 'ROLL-2026-007',
     name: 'Rohan Gupta',
     course: 'Information Technology',
     date: '23 Nov 2026',
@@ -107,8 +114,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9654321098',
   },
   {
-    id: 'ROLL-2026-008',
+    id: 'ADM-2026-008',
     admissionNo: 'ADM-2026-008',
+    rollNo: 'ROLL-2026-008',
     name: 'Divya Nair',
     course: 'Artificial Intelligence and Machine Learning',
     date: '22 Nov 2026',
@@ -118,8 +126,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9612345678',
   },
   {
-    id: 'ROLL-2026-009',
+    id: 'ADM-2026-009',
     admissionNo: 'ADM-2026-009',
+    rollNo: 'ROLL-2026-009',
     name: 'Vikram Joshi',
     course: 'Electronics & Communication',
     date: '21 Nov 2026',
@@ -129,8 +138,9 @@ const defaultInitialStudents: StudentRecord[] = [
     phone: '9543210987',
   },
   {
-    id: 'ROLL-2026-010',
+    id: 'ADM-2026-010',
     admissionNo: 'ADM-2026-010',
+    rollNo: 'ROLL-2026-010',
     name: 'Meera Deshmukh',
     course: 'Computer Science & Engineering',
     date: '20 Nov 2026',
@@ -154,18 +164,33 @@ export function App() {
       const saved = localStorage.getItem('edu_realtime_students');
       if (saved) {
         const parsed: StudentRecord[] = JSON.parse(saved);
-        return parsed.map((s, idx) => ({
-          ...s,
-          id: s.id || `ROLL-2026-${String(idx + 1).padStart(3, '0')}`,
-          admissionNo: s.admissionNo || `ADM-2026-${String(idx + 1).padStart(3, '0')}`,
-          name: s.name || 'Student',
-          course: s.course === 'Data Science & AI' ? 'Data Science' : (s.course || 'General'),
-          gpa: typeof s.gpa === 'number' ? s.gpa : (parseFloat(String(s.gpa)) || 8.0),
-          email: s.email || '',
-          phone: s.phone || '',
-          gender: s.gender || 'Other',
-          date: s.date || '26 Nov 2026',
-        }));
+        return parsed.map((s, idx) => {
+          const numStr = String(idx + 1).padStart(3, '0');
+          const foundMatch = (s.id || s.admissionNo || '').match(/\d+$/);
+          const studentNum = foundMatch ? foundMatch[0].padStart(3, '0') : numStr;
+
+          const adm = s.admissionNo && s.admissionNo.startsWith('ADM')
+            ? s.admissionNo.replace('#', '')
+            : `ADM-2026-${studentNum}`;
+
+          const roll = s.rollNo && s.rollNo.startsWith('ROLL')
+            ? s.rollNo.replace('#', '')
+            : `ROLL-2026-${studentNum}`;
+
+          return {
+            ...s,
+            id: adm,
+            admissionNo: adm,
+            rollNo: roll,
+            name: s.name || 'Student',
+            course: s.course === 'Data Science & AI' ? 'Data Science' : (s.course || 'General'),
+            gpa: typeof s.gpa === 'number' ? s.gpa : (parseFloat(String(s.gpa)) || 8.0),
+            email: s.email || '',
+            phone: s.phone || '',
+            gender: s.gender || 'Other',
+            date: s.date || '26 Nov 2026',
+          };
+        });
       }
     } catch {
       // Fallback
@@ -193,11 +218,13 @@ export function App() {
 
   const handleStudentAdded = (newStudent: StudentFormData) => {
     const fullName = `${newStudent.firstName} ${newStudent.lastName}`.trim();
+    const cleanAdm = (newStudent.admissionNumber || `ADM-2026-${students.length + 1}`).replace('#', '');
+    const cleanRoll = (newStudent.rollNumber || `ROLL-2026-${students.length + 1}`).replace('#', '');
+
     const formatted: StudentRecord = {
-      id: newStudent.rollNumber.startsWith('#')
-        ? newStudent.rollNumber.replace('#', '')
-        : newStudent.rollNumber,
-      admissionNo: newStudent.admissionNumber,
+      id: cleanAdm,
+      admissionNo: cleanAdm,
+      rollNo: cleanRoll,
       name: fullName,
       course: newStudent.department,
       date: new Date().toLocaleDateString('en-GB', {
@@ -219,10 +246,9 @@ export function App() {
     const query = searchQuery.trim().toLowerCase();
     const cleanQuery = query.startsWith('#') ? query.slice(1).trim() : query;
 
-    // Safe fallbacks to prevent any undefined crashes
     const name = String(student.name || '').toLowerCase();
-    const rollNo = String(student.id || '').toLowerCase();
     const admNo = String(student.admissionNo || '').toLowerCase();
+    const rollNo = String(student.rollNo || '').toLowerCase();
     const course = String(student.course || '').toLowerCase();
     const email = String(student.email || '').toLowerCase();
     const phone = String(student.phone || '');
@@ -230,10 +256,10 @@ export function App() {
     const matchesSearch =
       query === '' ||
       name.includes(query) ||
-      rollNo.includes(query) ||
-      rollNo.includes(cleanQuery) ||
       admNo.includes(query) ||
       admNo.includes(cleanQuery) ||
+      rollNo.includes(query) ||
+      rollNo.includes(cleanQuery) ||
       course.includes(query) ||
       email.includes(query) ||
       phone.includes(query);
@@ -266,7 +292,7 @@ export function App() {
               </h1>
               <p className="page-sub-heading">
                 {activeTab === 'dashboard'
-                  ? 'Real-time performance metrics and student directory'
+                  ? 'Performance metrics and student directory'
                   : activeTab === 'students'
                   ? 'Search, filter, and manage enrolled students'
                   : activeTab === 'registration'
@@ -282,7 +308,7 @@ export function App() {
               existingCount={students.length} 
             />
           ) : activeTab === 'students' ? (
-            /* ALL STUDENTS PAGE (Cards Header Removed, Active Search, Filters, Refresh, Add Student) */
+            /* ALL STUDENTS PAGE */
             <div className="panel fullwidth-directory-panel">
               {/* Active Search & Filter Toolbar */}
               <div className="directory-toolbar">
@@ -371,7 +397,7 @@ export function App() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Roll No / Admission No</th>
+                      <th>Admission No / Roll No</th>
                       <th>Student Name</th>
                       <th>Gender</th>
                       <th>Department</th>
@@ -386,10 +412,10 @@ export function App() {
                         <tr key={student.id}>
                           <td>
                             <strong style={{ color: 'var(--primary-color)' }}>
-                              #{student.id}
+                              #{student.admissionNo}
                             </strong>
-                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                              {student.admissionNo}
+                            <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
+                              Roll: {student.rollNo}
                             </div>
                           </td>
                           <td>
@@ -433,7 +459,7 @@ export function App() {
               </div>
             </div>
           ) : (
-            /* DASHBOARD PAGE (Shows 4 Metric Cards + Recent Students + Real-Time Summary) */
+            /* DASHBOARD PAGE */
             <>
               {/* Dynamic Accurate Metric Cards */}
               <section className="cards-grid">
@@ -479,19 +505,14 @@ export function App() {
                 <div className="panel recent-registrations">
                   <div className="panel-header">
                     <h2>Recent Student Registrations</h2>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span className="live-indicator">
-                        <Sparkles size={14} /> Real-Time Sync Active
-                      </span>
-                      <span className="badge">{totalStudents} Total</span>
-                    </div>
+                    <span className="badge">{totalStudents} Total</span>
                   </div>
 
                   <div className="table-responsive">
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Roll No / Admission No</th>
+                          <th>Admission No / Roll No</th>
                           <th>Student Name</th>
                           <th>Gender</th>
                           <th>Department</th>
@@ -505,10 +526,10 @@ export function App() {
                           <tr key={student.id}>
                             <td>
                               <strong style={{ color: 'var(--primary-color)' }}>
-                                #{student.id}
+                                #{student.admissionNo}
                               </strong>
-                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                                {student.admissionNo}
+                              <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
+                                Roll: {student.rollNo}
                               </div>
                             </td>
                             <td>
