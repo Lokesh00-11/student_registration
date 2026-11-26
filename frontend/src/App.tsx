@@ -573,6 +573,43 @@ export function App() {
                   </div>
                 </div>
               </section>
+
+              {/* Members Present in Each Course Section */}
+              <section className="course-distribution-section">
+                <div className="panel fullwidth-course-panel">
+                  <div className="panel-header">
+                    <h2>Course Enrollment Breakdown</h2>
+                    <span className="badge">{uniqueDepartmentsCount} Active Courses</span>
+                  </div>
+
+                  <div className="course-cards-grid">
+                    {DEPARTMENTS.map((dept) => {
+                      const count = students.filter((s) => s.course === dept).length;
+                      const percentage =
+                        totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0;
+                      return (
+                        <div key={dept} className="course-stat-card">
+                          <div className="course-card-header">
+                            <span className="course-name">{dept}</span>
+                            <span className="course-count-badge">
+                              <strong>{count}</strong> {count === 1 ? 'member' : 'members'}
+                            </span>
+                          </div>
+                          <div className="course-progress-bar">
+                            <div
+                              className="course-progress-fill"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <div className="course-card-footer">
+                            <small>{percentage}% of total student strength</small>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
             </>
           )}
         </main>

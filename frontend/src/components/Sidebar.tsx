@@ -3,9 +3,7 @@ import {
   LayoutDashboard, 
   Users, 
   UserPlus, 
-  BookOpen, 
   GraduationCap, 
-  Settings, 
   LogOut 
 } from 'lucide-react';
 
@@ -19,9 +17,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'students', label: 'All Students', icon: Users },
     { id: 'registration', label: 'New Registration', icon: UserPlus },
-    { id: 'courses', label: 'Courses', icon: BookOpen },
-    { id: 'academics', label: 'Academics', icon: GraduationCap },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
