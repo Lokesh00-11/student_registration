@@ -1,27 +1,15 @@
 export interface StudentDto {
   id?: number;
-  admissionNo: string;
-  rollNo: string;
-  department: string;
-  semester?: string;
-  gpa?: number;
   firstName: string;
   lastName: string;
   dob?: string;
   gender?: string;
-  bloodGroup?: string;
-  nationality?: string;
+  department: string;
+  year?: string;
   fatherName?: string;
-  motherName?: string;
-  fatherOccupation?: string;
   parentPhone?: string;
   email: string;
   phone: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  pinCode?: string;
-  createdAt?: string;
 }
 
 const API_BASE_URL = 'http://localhost:8088/api/students';
@@ -56,14 +44,15 @@ export const studentApi = {
     });
 
     if (!res.ok) {
-      const errorMsg = await res.text();
-      throw new Error(errorMsg || 'Failed to save student in PostgreSQL database');
+      const errText = await res.text();
+      throw new Error(errText || 'Failed to save student to database');
     }
+
     return res.json();
   },
 
-  // PUT update student by ID
-  async update(id: number, student: Partial<StudentDto>): Promise<StudentDto> {
+  // PUT update student in DB
+  async update(id: number, student: StudentDto): Promise<StudentDto> {
     const res = await fetch(`${API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: {
@@ -73,19 +62,22 @@ export const studentApi = {
     });
 
     if (!res.ok) {
-      const errorMsg = await res.text();
-      throw new Error(errorMsg || `Failed to update student #${id}`);
+      const errText = await res.text();
+      throw new Error(errText || `Failed to update student #${id}`);
     }
+
     return res.json();
   },
 
-  // DELETE student by ID
+  // DELETE student from DB
   async delete(id: number): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/${id}`, {
       method: 'DELETE',
     });
+
     if (!res.ok) {
-      throw new Error(`Failed to delete student #${id}`);
+      const errText = await res.text();
+      throw new Error(errText || `Failed to delete student #${id}`);
     }
   },
 };

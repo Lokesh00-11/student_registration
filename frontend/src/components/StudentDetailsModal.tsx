@@ -5,12 +5,10 @@ import {
   User,
   GraduationCap,
   Users,
-  MapPin,
   Mail,
   Phone,
   Calendar,
-  Edit3,
-  Hash
+  Edit3
 } from 'lucide-react';
 
 interface StudentDetailsModalProps {
@@ -39,22 +37,19 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
         {/* Modal Header */}
         <div className="modal-header">
           <div className="modal-title-area">
-            <div className="modal-avatar">
-              <User size={24} color="#2563eb" />
-            </div>
             <div>
               <h2 className="modal-title">
                 {student ? `${student.firstName} ${student.lastName}` : 'Student Details'}
               </h2>
               <div className="modal-subtitle-tags">
-                {student?.admissionNo && (
+                {student?.id && (
                   <span className="info-badge adm-badge">
-                    <Hash size={12} /> {student.admissionNo}
+                    ID: #{student.id}
                   </span>
                 )}
-                {student?.rollNo && (
+                {student?.year && (
                   <span className="info-badge roll-badge">
-                    Roll: {student.rollNo}
+                    {student.year}
                   </span>
                 )}
                 {student?.department && (
@@ -75,7 +70,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
           {isLoading ? (
             <div className="modal-loading-state">
               <div className="modal-spinner" />
-              <p>Loading full student details from PostgreSQL database...</p>
+              <p>Loading student details from database...</p>
             </div>
           ) : student ? (
             <div className="student-details-grid">
@@ -91,24 +86,12 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                     <span className="field-value font-semibold">{student.department || '—'}</span>
                   </div>
                   <div className="detail-field">
-                    <span className="field-label">Current Semester</span>
-                    <span className="field-value">{student.semester || '1st Semester'}</span>
+                    <span className="field-label">Academic Year</span>
+                    <span className="field-value font-semibold">{student.year || '1st Year'}</span>
                   </div>
                   <div className="detail-field">
-                    <span className="field-label">Admission Number</span>
-                    <span className="field-value font-mono">{student.admissionNo || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">Student Roll Number</span>
-                    <span className="field-value font-mono">{student.rollNo || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">Current GPA (0 - 10)</span>
-                    <span className="field-value">
-                      <span className="gpa-pill">
-                        {Number(student.gpa).toFixed(2)} / 10.0
-                      </span>
-                    </span>
+                    <span className="field-label">Database Record ID</span>
+                    <span className="field-value font-mono">#{student.id}</span>
                   </div>
                 </div>
               </div>
@@ -139,14 +122,6 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                     <span className="field-label">Gender</span>
                     <span className="field-value">{student.gender || '—'}</span>
                   </div>
-                  <div className="detail-field">
-                    <span className="field-label">Blood Group</span>
-                    <span className="field-value">{student.bloodGroup || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">Nationality</span>
-                    <span className="field-value">{student.nationality || 'Indian'}</span>
-                  </div>
                 </div>
               </div>
 
@@ -160,14 +135,6 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                   <div className="detail-field">
                     <span className="field-label">Father's Name</span>
                     <span className="field-value">{student.fatherName || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">Mother's Name</span>
-                    <span className="field-value">{student.motherName || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">Father's Occupation</span>
-                    <span className="field-value">{student.fatherOccupation || '—'}</span>
                   </div>
                   <div className="detail-field">
                     <span className="field-label">Parent Contact Phone</span>
@@ -185,11 +152,11 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                 </div>
               </div>
 
-              {/* Section 4: Contact & Residential Details */}
+              {/* Section 4: Contact Details */}
               <div className="detail-card">
                 <div className="detail-card-header">
-                  <MapPin size={18} className="section-icon" />
-                  <h3>Contact & Residential Details</h3>
+                  <Phone size={18} className="section-icon" />
+                  <h3>Contact Information</h3>
                 </div>
                 <div className="detail-fields-grid">
                   <div className="detail-field">
@@ -217,22 +184,6 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                         '—'
                       )}
                     </span>
-                  </div>
-                  <div className="detail-field full-width">
-                    <span className="field-label">Residential Address</span>
-                    <span className="field-value">{student.address || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">City</span>
-                    <span className="field-value">{student.city || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">State</span>
-                    <span className="field-value">{student.state || '—'}</span>
-                  </div>
-                  <div className="detail-field">
-                    <span className="field-label">PIN Code</span>
-                    <span className="field-value font-mono">{student.pinCode || '—'}</span>
                   </div>
                 </div>
               </div>

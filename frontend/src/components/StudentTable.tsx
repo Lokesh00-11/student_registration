@@ -22,13 +22,13 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       <table className="data-table">
         <thead>
           <tr>
-            <th>Admission No / Roll No</th>
+            <th>Student ID</th>
             <th>Student Name</th>
             <th>Gender</th>
+            <th>Date of Birth</th>
             <th>Department</th>
-            <th>GPA</th>
-            <th>Contact Details</th>
-            <th>Reg Date</th>
+            <th>Year</th>
+            <th>Student Email</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -37,33 +37,35 @@ export const StudentTable: React.FC<StudentTableProps> = ({
             students.map((student) => (
               <tr key={student.id}>
                 <td>
-                  <strong style={{ color: 'var(--primary-color)' }}>
-                    #{student.admissionNo}
+                  <strong style={{ color: 'var(--primary-color)', fontFamily: 'monospace' }}>
+                    #{student.numericId || student.id}
                   </strong>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
-                    Roll: {student.rollNo}
-                  </div>
                 </td>
                 <td>
                   <div style={{ fontWeight: 600 }}>{student.name}</div>
                 </td>
                 <td>{student.gender}</td>
+                <td>{student.dob || '—'}</td>
                 <td>{student.course}</td>
                 <td>
-                  {/* Single Uniform Blue Color for all GPAs */}
-                  <span className="gpa-pill">
-                    {student.gpa.toFixed(2)}
+                  <span style={{ 
+                    display: 'inline-block',
+                    padding: '3px 9px',
+                    borderRadius: '12px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    backgroundColor: '#eff6ff',
+                    color: '#2563eb',
+                    border: '1px solid #bfdbfe'
+                  }}>
+                    {student.year || '1st Year'}
                   </span>
                 </td>
                 <td>
-                  <div style={{ fontSize: '0.86rem', color: '#475569' }}>
-                    {student.email}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                    +91 {student.phone}
+                  <div style={{ fontSize: '0.86rem', color: '#475569', wordBreak: 'break-all' }}>
+                    {student.email || '—'}
                   </div>
                 </td>
-                <td>{student.date}</td>
                 <td>
                   <div className="action-buttons-cell">
                     <button

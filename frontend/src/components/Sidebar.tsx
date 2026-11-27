@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  LayoutDashboard, 
   Users, 
   UserPlus, 
   GraduationCap, 
@@ -14,9 +13,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'students', label: 'All Students', icon: Users },
-    { id: 'registration', label: 'New Registration', icon: UserPlus },
+    { id: 'students', label: 'Student Details', icon: Users },
+    { id: 'registration', label: 'Student Registration', icon: UserPlus },
   ];
 
   return (
