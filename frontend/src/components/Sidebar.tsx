@@ -1,9 +1,8 @@
 import React from 'react';
-import { 
-  Users, 
-  UserPlus, 
-  GraduationCap, 
-  LogOut 
+import {
+  Users,
+  UserPlus,
+  GraduationCap,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,13 +46,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           })}
         </ul>
       </nav>
-
-      <div className="sidebar-footer">
-        <button className="nav-link logout-btn">
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
     </aside>
   );
 };

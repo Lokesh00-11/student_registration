@@ -34,6 +34,18 @@ export interface StudentFormData {
 
 export const ACADEMIC_YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'] as const;
 
+export const DEPARTMENTS = [
+  'Computer Science & Engineering',
+  'Information Technology',
+  'Data Science',
+  'Artificial Intelligence and Machine Learning',
+  'Electronics & Communication',
+  'Mechanical Engineering',
+] as const;
+
+export type AcademicYear = (typeof ACADEMIC_YEARS)[number];
+export type Department = (typeof DEPARTMENTS)[number];
+
 export const initialStudentFormData: StudentFormData = {
   firstName: '',
   lastName: '',

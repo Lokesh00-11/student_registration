@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { DEPARTMENTS } from '../constants/departments';
 import { studentApi, type StudentDto } from '../services/studentApi';
 import {
   type StudentFormData,
   initialStudentFormData,
   ACADEMIC_YEARS,
+  DEPARTMENTS,
 } from '../types/student';
 import {
   User,
